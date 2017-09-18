@@ -115,6 +115,9 @@ ptvCentroid=[mean(ptvSub(:,1)); mean(ptvSub(:,2)); mean(ptvSub(:,3))];
 % ratio of the sampling intervals in the three axes is 1:alpha:beta for
 % row:column:plane viz 1:columnSpacing/rowSpacing:heightSpacing/rowSpacing
 
+%Calculate two kinds of distance 
+%bladder vs Ptv
+%rectum vs Ptv
 bladderPtv = sqrt((bladderCentroid(1,1)-ptvCentroid(1,1))^2+(bladderCentroid(2,1)-ptvCentroid(2,1))^2+(bladderCentroid(3,1)-ptvCentroid(3,1))^2);
 rectumPtv = sqrt((rectumCentroid(1,1)-ptvCentroid(1,1))^2+(rectumCentroid(2,1)-ptvCentroid(2,1))^2+(rectumCentroid(3,1)-ptvCentroid(3,1))^2);
 

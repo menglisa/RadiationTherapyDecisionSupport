@@ -5,7 +5,7 @@ clear all;
 %*********************************
 % SET INITIAL PARAMETERS
 ROI_num=3;
-patient_number = 4;
+patient_number = 5;
 
 rowSpacing = 0.9765;
 columnSpacing = 0.9765;
@@ -107,6 +107,13 @@ for plane = 1:numPlanes % for each contour plane of the selected ROI
         count=count+1;
     end
 
+    %
+    %
+    %
+    %Main Function from contour points to ROI
+    %
+    %
+    
     polyMask=poly2mask(colCoords,rowCoords,512,512);%1s (ones) represent the structure; is an ROI mask
     % read help; substitute x with x.5 to ensure that all coordinates are
     % included?
