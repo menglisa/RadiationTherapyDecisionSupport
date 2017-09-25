@@ -33,6 +33,18 @@ Sort of an extension to Sphinx, allows us to write documentation in the code its
 * [Jupyter Notebook](jupyter.readthedocs.io/en/latest/install.html) - For showing results of python functions in
 html-like file.
 
+#### The Version of Python To Use
+
+Two versions of Python exist- Python 2.x (2.7) and 3.x. While some
+py files can be run effectively in both versions, it is best to test
+your code in Python 3.x as that is the version on the VM that
+will run with Jupyter Notebook. 
+
+To run python functions in Python 3 in the terminal type:
+```bash
+$ python3 FILENAME.py
+```
+
 ## Virtual Machine (and how to pull Github Repo to VM)
 
 Some of the modules are difficult to install, particularly OpenCV
