@@ -1,2 +1,5 @@
 # Ignore compiled python files for git PR
 *.pyc
+
+# Ignore extra folders
+/.idea
