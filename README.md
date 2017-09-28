@@ -62,11 +62,11 @@ The virtual machine contains a single user account ``radiation``. The
 password for the account is also ``radiation`` if needed (e.g. for running
 ``sudo`` command in terminal). 
 
-In order to get this github repo on the VM, please run the following
-commands:
+In order to get this github repo on the VM, please run the following commands at the terminal:
 
 ```shell
-git clone https://github.com/SlevinZhang/RadiationTherapyDecision Support 
+git clone https://github.com/SlevinZhang/RadiationTherapyDecisionSupport
+cd RadiationTherapyDecisionSupport 
 git remote rename origin upstream
 git remote add origin https://github.com/<github_username>/RadiationTherapyDecisionSupport
 ```
