@@ -2,7 +2,7 @@ import dicom
 import numpy as np
 from skimage.draw import polygon
 
-def getContours(block_shape, slice_position_z, contour_data, image_orientaton, image_position, pixel_spacing):
+def getContours(block_shape, slice_position_z, contour_data, image_orientation, image_position, pixel_spacing):
 	"""
 	Returns the contour (perimeter) of a specified ROI, and
 	the ROI mask of a specified ROI.
