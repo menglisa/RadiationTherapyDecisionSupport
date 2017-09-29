@@ -25,8 +25,9 @@ Tentatively, these modules will be used:
 * [PyDicom](https://github.com/pydicom/pydicom)- For reading
 DICOM files - v0.99
 * [MatPlotLib](matplotlib.org) - For plotting graphs (OVH, DVH, etc)- v2.0.2
-* [OpenCV](opencv.org/opencv-3-0.html) - For image processing functions v3.x
+* [OpenCV](opencv.org/opencv-3-0.html) - For image processing functions- v3.x
 * [Scipy](https://www.scipy.org) - For showing images- version not specified
+* [Scikit-Image](scikit-image.org) - For additional image processing functions - v1.13
 * [Sphinx](www.sphinx-doc.org) - So that I can compile pdf documentation- version not specified
 * [Numpydoc](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt)
 Sort of an extension to Sphinx, allows us to write documentation in the code itself - version not specified
@@ -162,25 +163,9 @@ Because of this, it is generally a good idea to write / draft
 your functions in jupyter notebook to confirm they work as intended.
 Then you can copy them to a py file for use in program.
 
-See the example (TODO) for further example.
+See getContours.ipynb for an example- the inputs are loaded in the notebook, passed to the function defined in getContours.py, then
+the results are displayed in the notebook again.
 
 ## TODO
 
-Functions that need to be built include:
-
-#### General
-1) Function to plot DVH
-2) Function to create CT image block, view it
-3) Function to display contours on CT image, view it
-4) Function to create 2D isodose wash
-
-#### OVH
-1) Function to get contours for PTV and OAR – PTV need only be a contour outline (points on the contour). OAR requires a filled-in outline (points in and on the contour).
-2) Function to get volume of ROI
-3) Function to get distance between each OAR voxel and the closest surface of the PTV. We get the distance of the voxel to every point on the PTV surface and then select minimum distance. This can be obtained through weighted Euclidean distance between matrix indices of the two points. 
-4) Function to create a histogram with equally-spaced bins of voxels.
-5) Function to normalize voxel count to percentage by voxel_count / ROI_Volume, and convert histogram to cumulative form.
-
-#### Veda's TODO
-1) Develop example Jupyter notebook + py file (probably to create
-CT image block + view it)
+See the Word Document "python_notes.docx" in the Dropbox Folder for functions that still need to be built.
