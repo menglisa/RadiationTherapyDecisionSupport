@@ -71,6 +71,14 @@ git remote rename origin upstream
 git remote add origin https://github.com/<github_username>/RadiationTherapyDecisionSupport
 ```
 
+As an example, I would clone my repo using
+```
+git clone https://github.com/SlevinZhang/RadiationTherapyDecisionSupport
+cd RadiationTherapyDecisionSupport 
+git remote rename origin upstream
+git remote add origin https://github.com/vvmurthy/RadiationTherapyDecisionSupport
+```
+
 What these commands will do is allow you to update the shared repository
 by using:
 ```shell
@@ -94,6 +102,13 @@ to ``git commit``:
 ```shell
 git config --global user.email "YOUR_GITHUB_EMAIL"
 git config --global user.name "YOUR_ACTUAL_NAME"
+```
+
+Occasionally, you will need to update your own personal fork of this repo with the edits pushed onto the shared repo by others.
+You can do this using the command:
+
+```shell
+git pull upstream master
 ```
 
 If your edits are major and currently buggy, it is probably best
