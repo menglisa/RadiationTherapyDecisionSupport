@@ -35,24 +35,26 @@ def getIsodose(dose_grid, DoseGridScaling):
     
     doseBlocks = np.zeros(dose_grid.shape).astype(np.uint8)
     
-    for n in range(0, len(isodoseValues)):
+ 
         
+    for n in range(0, len(isodoseValues)):
+
         tempDoseMask = np.zeros(dose_grid.shape).astype(np.uint8)
         doseOutline = np.zeros(dose_grid.shape).astype(np.uint8)
-        
+
         doseMask = dose_grid > isodoseValues[n]*0.01 # removed maxDose 
         tempDoseMask[doseMask] = 1;
-        
+
         for j in range(0, dose_grid.shape[3]):
             for channel in range(0, 3):
                 temp_temp_mask = np.array(tempDoseMask[:,:,channel,j]).astype(np.uint8)
-                doseOutine[:,:,channel,j], contours, hierarchy = cv2.findContours(temp_temp_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-                
+                doseOutline[:,:,channel,j], contours, hierarchy = cv2.findContours(temp_temp_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
                 temp_array = np.zeros(doseOutline[:,:,channel,j].shape).astype(np.uint8)
-                
+
                 cv2.drawContours(temp_array, contours, -1, 255, 1)
                 temp_mask = temp_array == 255
                 temp_array[temp_mask] = 255 * isodoseValues[n] / 100;
-                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask];    
+                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask];   
                                                                                   
       return doseBlocks
