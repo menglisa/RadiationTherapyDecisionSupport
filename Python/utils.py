@@ -208,11 +208,7 @@ def getImageBlock(patientID):
         layer += 1
     return imageBlock,SOPID
  
-# def mouse_callback(event,slicelocation,flags,param):
-#     if event == cv2.EVENT_MOUSEWHEEL:
-#         delta = cv2.getMouseWheelDelta()
-#         if delta > 0:
-#             cv2.
+
 if __name__ == '__main__':
     patientID = 'UCLA_PR_5'
     imageBlock,SOPID = get_ct_image_block(patientID)
