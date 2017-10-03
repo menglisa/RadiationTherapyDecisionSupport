@@ -25,8 +25,8 @@ def getIsodose(dose_grid, DoseGridScaling):
     dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
     
-    dose_grid = np.expand_dims(dose_grid, 3, axis=2)
-    dose_grid = np.repeats(dose_grid, 3, axis=2)
+    dose_grid = np.expand_dims(dose_grid, axis=2)
+    dose_grid = np.repeat(dose_grid, 3, axis=2)
     
     maxDose = np.max(dose_grid)
     dose_grid = dose_grid/maxDose
@@ -57,4 +57,4 @@ def getIsodose(dose_grid, DoseGridScaling):
                 temp_array[temp_mask] = 255 * isodoseValues[n] / 100;
                 doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask];   
                                                                                   
-      return doseBlocks
+    return doseBlocks
