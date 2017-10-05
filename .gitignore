@@ -3,6 +3,5 @@
 
 # Ignore extra folders
 /.idea
-/Python/OVH/.ipynb_checkpoints
-/Pythony
-/General/.ipynb_checkpoints
+Python/OVH/.ipynb_checkpoints
+Python/General/.ipynb_checkpoints

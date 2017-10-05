@@ -49,8 +49,8 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
 		elsewhere.
 
 	"""
-	contour_block = np.zeros((block_shape)).astype(np.int)
-	roi_block = np.zeros((block_shape)).astype(np.int)
+	contour_block = np.zeros((block_shape)).astype(np.int8)
+	roi_block = np.zeros((block_shape)).astype(np.int8)
 
 	for sop in contour_data:
 
