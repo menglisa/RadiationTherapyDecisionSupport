@@ -24,19 +24,20 @@ def getIsodose(dose_grid, DoseGridScaling):
     
     dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
-    
+
     dose_grid = np.expand_dims(dose_grid, axis=2)
     dose_grid = np.repeat(dose_grid, 3, axis=2)
-    
+
     maxDose = np.max(dose_grid)
     dose_grid = dose_grid/maxDose
-    
+
     isodoseValues = np.array([40, 50, 60, 70, 80, 90, 95])
-    
+
     doseBlocks = np.zeros(dose_grid.shape).astype(np.uint8)
-    
- 
-        
+
+    colors = np.array([[255, 0, 255], [255, 0, 0], [255, 165, 0], [255, 255, 0], [0, 128, 0], [0, 0, 255], [128, 0, 128]])
+
+
     for n in range(0, len(isodoseValues)):
 
         tempDoseMask = np.zeros(dose_grid.shape).astype(np.uint8)
@@ -54,7 +55,7 @@ def getIsodose(dose_grid, DoseGridScaling):
 
                 cv2.drawContours(temp_array, contours, -1, 255, 1)
                 temp_mask = temp_array == 255
-                temp_array[temp_mask] = 255 * isodoseValues[n] / 100;
-                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask];   
+                temp_array[temp_mask] = colors[n, channel]
+                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask]  
                                                                                   
     return doseBlocks
