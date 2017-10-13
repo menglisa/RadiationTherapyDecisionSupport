@@ -220,7 +220,8 @@ def getImageBlock(patientID):
             return None
     layer = 0
     #the larger number of slicelocation is at the top, so reverse the order
-    images = OrderedDict(sorted(images.items(),reverse=True))
+    #The head is the largest value of slicelocation
+    #images = OrderedDict(sorted(images.items(),reverse=True))
     imageBlock = np.zeros((df.Rows,df.Columns,len(images)))
     for key,value in images.items():
         SOPID[key] = value[0]
