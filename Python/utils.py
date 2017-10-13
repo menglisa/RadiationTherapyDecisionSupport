@@ -208,7 +208,7 @@ def getImageBlock(patientID):
     #####################
     ct_files = glob.glob(DATA_PATH + patientID + '/' + 'CT*.dcm')
     num_ct_scans = len(ct_files)
-    SOPID = []
+    SOPID = OrderedDict()
     images = OrderedDict()
     for file in ct_files:
         df = dicom.read_file(file)
@@ -223,7 +223,7 @@ def getImageBlock(patientID):
     images = OrderedDict(sorted(images.items(),reverse=True))
     imageBlock = np.zeros((df.Rows,df.Columns,len(images)))
     for key,value in images.items():
-        SOPID.append(value[0])
+        SOPID[key] = value[0]
         imageBlock[:,:,layer] = value[1]
         layer += 1
     return imageBlock,SOPID
