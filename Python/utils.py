@@ -6,7 +6,6 @@ import utils
 
 
 '''
-
 import numpy as np
 from skimage.draw import polygon
 import os
@@ -15,6 +14,26 @@ import glob
 from collections import Counter,OrderedDict
 import settings
 import cv2
+
+
+def getVolume(roi_block):
+    """
+    Returns the volume of an ROI as the number of voxels it contains
+    
+    Parameters
+    ----------
+    roi_block : 3d Ndarray
+        A 3D array of dimensions h x w  x num_cts. Contains 1s on and inside contour perimeter and 0s elsewhere.
+        
+    Returns
+    -------
+    volume : int
+        Number of voxels in ROI 
+   
+    """
+    
+    volume = np.count_nonzero(roi_block)
+    return volume
 
 
 def getIsodose(dose_grid, DoseGridScaling):
@@ -39,8 +58,8 @@ def getIsodose(dose_grid, DoseGridScaling):
     dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
     
-    dose_grid = np.expand_dims(dose_grid, 3, axis=2)
-    dose_grid = np.repeats(dose_grid, 3, axis=2)
+    dose_grid = np.expand_dims(dose_grid, axis=2)
+    dose_grid = np.repeat(dose_grid, 3, axis=2)
     
     maxDose = np.max(dose_grid)
     dose_grid = dose_grid/maxDose
@@ -165,6 +184,7 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
     
     return contour_block, roi_block
 
+
 def getImageBlock(patientID):
     """
     Numpy array of CT_IMAGE_BLOCK [height x width x num_ct_scans]. 
@@ -188,7 +208,7 @@ def getImageBlock(patientID):
     #####################
     ct_files = glob.glob(DATA_PATH + patientID + '/' + 'CT*.dcm')
     num_ct_scans = len(ct_files)
-    SOPID = []
+    SOPID = OrderedDict()
     images = OrderedDict()
     for file in ct_files:
         df = dicom.read_file(file)
@@ -200,10 +220,11 @@ def getImageBlock(patientID):
             return None
     layer = 0
     #the larger number of slicelocation is at the top, so reverse the order
-    images = OrderedDict(sorted(images.items(),reverse=True))
+    #The head is the largest value of slicelocation
+    #images = OrderedDict(sorted(images.items(),reverse=True))
     imageBlock = np.zeros((df.Rows,df.Columns,len(images)))
     for key,value in images.items():
-        SOPID.append(value[0])
+        SOPID[key] = value[0]
         imageBlock[:,:,layer] = value[1]
         layer += 1
     return imageBlock,SOPID
