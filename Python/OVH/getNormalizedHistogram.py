@@ -22,8 +22,5 @@ def getNormalizedHistogram(bin_amts, volume):
 
 	"""
 
-
-
-
 	norm_bin_amts = np.cumsum(bin_amts) / np.float32(volume)
 	return norm_bin_amts

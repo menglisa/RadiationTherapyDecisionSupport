@@ -57,19 +57,21 @@ def getIsodose(dose_grid, DoseGridScaling):
     
     dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
-    
+
     dose_grid = np.expand_dims(dose_grid, axis=2)
     dose_grid = np.repeat(dose_grid, 3, axis=2)
-    
+
     maxDose = np.max(dose_grid)
     dose_grid = dose_grid/maxDose
-    
+
     isodoseValues = np.array([40, 50, 60, 70, 80, 90, 95])
-    
+
     doseBlocks = np.zeros(dose_grid.shape).astype(np.uint8)
-    
- 
-        
+
+    colors = np.array([[255, 0, 255], [255, 0, 0], [255, 165, 0], 
+    	[255, 255, 0], [0, 128, 0], [0, 0, 255], [128, 0, 128]])
+
+
     for n in range(0, len(isodoseValues)):
 
         tempDoseMask = np.zeros(dose_grid.shape).astype(np.uint8)
@@ -87,8 +89,8 @@ def getIsodose(dose_grid, DoseGridScaling):
 
                 cv2.drawContours(temp_array, contours, -1, 255, 1)
                 temp_mask = temp_array == 255
-                temp_array[temp_mask] = 255 * isodoseValues[n] / 100;
-                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask];   
+                temp_array[temp_mask] = colors[n, channel]
+                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask]  
                                                                                   
     return doseBlocks
 
@@ -140,8 +142,10 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
         elsewhere.
 
     """
-    contour_block = np.zeros((block_shape)).astype(np.int)
-    roi_block = np.zeros((block_shape)).astype(np.int)
+    contour_block = np.zeros((block_shape)).astype(np.int8)
+    roi_block = np.zeros((block_shape)).astype(np.int8)
+    
+    slice_position_z = np.sort(slice_position_z)[::-1] # sort Z coords in descending order- head is most positive z value
 
     for sop in contour_data:
 
@@ -156,7 +160,7 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
             
             px = contour_data[sop][n, 0]
             py = contour_data[sop][n, 1]
-            
+        
             xx = image_orientation[sop][0]
             xy = image_orientation[sop][1]
             yx = image_orientation[sop][3]
@@ -164,13 +168,13 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
             
             sx = image_position[sop][0]
             sy = image_position[sop][1]
-            
+        
             delJ = pixel_spacing[sop][0]
             delI = pixel_spacing[sop][1]
-            
+        
             A = np.array([[xx * delI, yx * delJ], [xy*delI, yy*delJ]])
             b = np.array([px - sx, py - sy])
-            
+        
             v = np.linalg.solve(A, b)
             col_coordinates[count] = int(np.round(v[0]))
             row_coordinates[count] = int(np.round(v[1]))
@@ -181,11 +185,11 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
 
         rr, cc = polygon(row_coordinates, col_coordinates, shape=contour_block.shape[:2])
         roi_block[rr, cc, plane_coor] = 1
-    
+
     return contour_block, roi_block
 
 
-def getImageBlock(patientID):
+def getImageBlock(images, rows, cols, num_cts):
     """
     Numpy array of CT_IMAGE_BLOCK [height x width x num_ct_scans]. 
     Array is ordered such that first image is head, last is feet.
@@ -197,45 +201,21 @@ def getImageBlock(patientID):
 
     Returns
     -------
-    imageBlcok : 3d array
+    imageBlock : 3d Ndarray
         The shape is height * width * num_ct_scans
     uidList: list
         The list of UID, in the order as the slice
     """
-    ##find the files through file storage system and use the code left
-    ####Test parameter####
-    DATA_PATH = settings.DATA_PATH
-    #####################
-    ct_files = glob.glob(DATA_PATH + patientID + '/' + 'CT*.dcm')
-    num_ct_scans = len(ct_files)
-    SOPID = OrderedDict()
-    images = OrderedDict()
-    for file in ct_files:
-        df = dicom.read_file(file)
-        if df.pixel_array is not None:
-            #Based on the slicelocation to find where is the head where is the feet
-            images[df.SliceLocation] = (df.SOPInstanceUID,df.pixel_array)
-        else:
-            print("No images")
-            return None
     layer = 0
+    SOPID = OrderedDict()
+
     #the larger number of slicelocation is at the top, so reverse the order
     #The head is the largest value of slicelocation
-    #images = OrderedDict(sorted(images.items(),reverse=True))
-    imageBlock = np.zeros((df.Rows,df.Columns,len(images)))
+    images = OrderedDict(sorted(images.items(),reverse=True))
+    imageBlock = np.zeros((rows, cols, num_cts)).astype(np.uint16)
     for key,value in images.items():
         SOPID[key] = value[0]
         imageBlock[:,:,layer] = value[1]
         layer += 1
     return imageBlock,SOPID
  
-
-if __name__ == '__main__':
-    patientID = 'UCLA_PR_5'
-    imageBlock,SOPID = get_ct_image_block(patientID)
-#     print(imageBlock.shape)
-#     print(SOPID)
-    for index in range(300):
-        plt.figure(index)
-        plt.imshow(imageBlock[:,:,index],cmap=plt.get_cmap('gray'))
-        plt.show()
