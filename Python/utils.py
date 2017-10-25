@@ -1,10 +1,7 @@
 '''
 This module is for general functions we use in the algorithm
 use it in this way
-
 import utils
-
-
 '''
 import numpy as np
 from skimage.draw import polygon
@@ -14,6 +11,7 @@ import glob
 from collections import Counter,OrderedDict
 import settings
 import cv2
+import dicom
 
 
 def getVolume(roi_block):
@@ -57,21 +55,19 @@ def getIsodose(dose_grid, DoseGridScaling):
     
     dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
-
+    
     dose_grid = np.expand_dims(dose_grid, axis=2)
     dose_grid = np.repeat(dose_grid, 3, axis=2)
-
+    
     maxDose = np.max(dose_grid)
     dose_grid = dose_grid/maxDose
-
+    
     isodoseValues = np.array([40, 50, 60, 70, 80, 90, 95])
-
+    
     doseBlocks = np.zeros(dose_grid.shape).astype(np.uint8)
-
-    colors = np.array([[255, 0, 255], [255, 0, 0], [255, 165, 0], 
-    	[255, 255, 0], [0, 128, 0], [0, 0, 255], [128, 0, 128]])
-
-
+    
+ 
+        
     for n in range(0, len(isodoseValues)):
 
         tempDoseMask = np.zeros(dose_grid.shape).astype(np.uint8)
@@ -89,8 +85,8 @@ def getIsodose(dose_grid, DoseGridScaling):
 
                 cv2.drawContours(temp_array, contours, -1, 255, 1)
                 temp_mask = temp_array == 255
-                temp_array[temp_mask] = colors[n, channel]
-                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask]  
+                temp_array[temp_mask] = 255 * isodoseValues[n] / 100;
+                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask];   
                                                                                   
     return doseBlocks
 
@@ -99,53 +95,42 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
     """
     Returns the contour (perimeter) of a specified ROI, and
     the ROI mask of a specified ROI.
-
     Parameters
     ----------
     block_shape : tuple
         The shape of the CT block, in the format (height,
         width, number_of_ct_scans)
-
     slice_position_z : 1D NdArray
         The z coordinates of every CT scan for a patient.
-
     contour_data : dict of 2D NdArray
         Contains contour data (coordinates of contour perimeter)
         as specified by the clinician who entered them. Key
         for contour_data should be ReferencedSOPInstanceUID
         from the structureset dicom file.
-
     image_orientation : dict
         Contains image orientation data from dicom field
         ImageOrientationPatient for each ROI plane (subset
         of CT images). Key is also ReferencedSOPInstanceUID.
-
     image_position : dict
         Contains image position data from dicom field
         ImagePositionPatient for each ROI plane (subset
         of CT images). Key is also ReferencedSOPInstanceUID.
-
     pixel_spacing : dict
         Contains pixel spacing data from dicom field
         PixelSpacing for each ROI plane (subset
         of CT images). Key is also ReferencedSOPInstanceUID.
-
     Returns
     -------
     contour_block : 3D NdArray
         A 3D array of dimensions specified by block_shape. 
         Contains 1s at coordinates of contour and 0s elsewhere.
-
     roi_block : 3D NdArray
         A 3D array of dimensions specified by block_shape.
         Contains 1s on and inside contour perimeter and 0s
         elsewhere.
-
     """
-    contour_block = np.zeros((block_shape)).astype(np.int8)
-    roi_block = np.zeros((block_shape)).astype(np.int8)
-    
-    slice_position_z = np.sort(slice_position_z)[::-1] # sort Z coords in descending order- head is most positive z value
+    contour_block = np.zeros((block_shape)).astype(np.int)
+    roi_block = np.zeros((block_shape)).astype(np.int)
 
     for sop in contour_data:
 
@@ -160,7 +145,7 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
             
             px = contour_data[sop][n, 0]
             py = contour_data[sop][n, 1]
-        
+            
             xx = image_orientation[sop][0]
             xy = image_orientation[sop][1]
             yx = image_orientation[sop][3]
@@ -168,13 +153,13 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
             
             sx = image_position[sop][0]
             sy = image_position[sop][1]
-        
+            
             delJ = pixel_spacing[sop][0]
             delI = pixel_spacing[sop][1]
-        
+            
             A = np.array([[xx * delI, yx * delJ], [xy*delI, yy*delJ]])
             b = np.array([px - sx, py - sy])
-        
+            
             v = np.linalg.solve(A, b)
             col_coordinates[count] = int(np.round(v[0]))
             row_coordinates[count] = int(np.round(v[1]))
@@ -185,7 +170,7 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
 
         rr, cc = polygon(row_coordinates, col_coordinates, shape=contour_block.shape[:2])
         roi_block[rr, cc, plane_coor] = 1
-
+    
     return contour_block, roi_block
 
 
@@ -193,12 +178,10 @@ def getImageblock(patientID):
     """
     Numpy array of CT_IMAGE_BLOCK [height x width x num_ct_scans].
     Array is ordered such that first image is head, last is feet.
-
     Parameters
     ----------
     patientID : string
         The unique identifier for patient
-
     Returns
     -------
     imageBlcok : 3d array
@@ -232,6 +215,16 @@ def getImageblock(patientID):
         SOPID[key] = value[0]
         imageBlock[:, :, layer] = value[1]
         layer += 1
+    
     return imageBlock, SOPID
-
  
+
+#if __name__ == '__main__':
+#    patientID = 'UCLA_PR_5'
+#    imageBlock,SOPID = get_ct_image_block(patientID)
+#     print(imageBlock.shape)
+#     print(SOPID)
+#    for index in range(300):
+#        plt.figure(index)
+#        plt.imshow(imageBlock[:,:,index],cmap=plt.get_cmap('gray'))
+#plt.show()
