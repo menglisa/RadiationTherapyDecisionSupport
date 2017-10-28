@@ -1,8 +1,3 @@
-'''
-This module is for general functions we use in the algorithm
-use it in this way
-import utils
-'''
 import numpy as np
 from skimage.draw import polygon
 import os
@@ -95,6 +90,7 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
     """
     Returns the contour (perimeter) of a specified ROI, and
     the ROI mask of a specified ROI.
+
     Parameters
     ----------
     block_shape : tuple
@@ -119,6 +115,7 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
         Contains pixel spacing data from dicom field
         PixelSpacing for each ROI plane (subset
         of CT images). Key is also ReferencedSOPInstanceUID.
+
     Returns
     -------
     contour_block : 3D NdArray
@@ -174,21 +171,25 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
     return contour_block, roi_block
 
 
-def getImageblock(patientID):
+def getImageBlock(patientID):
     """
     Numpy array of CT_IMAGE_BLOCK [height x width x num_ct_scans].
     Array is ordered such that first image is head, last is feet.
+
     Parameters
     ----------
     patientID : string
         The unique identifier for patient
+        
     Returns
     -------
-    imageBlcok : 3d array
+    imageBlock : 3d array
         The shape is height * width * num_ct_scans
     uidList: list
         The list of UID, in the order as the slice
     """
+
+
     ##find the files through file storage system and use the code left
     ####Test parameter####
     DATA_PATH = settings.DATA_PATH
@@ -205,15 +206,18 @@ def getImageblock(patientID):
         else:
             print("No images")
             return None
-    layer = 0
-    # print(images)
-    # the larger number of slicelocation is at the top, so reverse the order
-    # Tha larger value of slicelocation is more closer to the head
-    # images = OrderedDict(sorted(images.items(),reverse=True))
+    
     imageBlock = np.zeros((df.Rows, df.Columns, len(images)))
     for key, value in images.items():
         SOPID[key] = value[0]
-        imageBlock[:, :, layer] = value[1]
+    
+    # the larger number of slicelocation is at the top, so reverse the order
+    # Tha larger value of slicelocation is more closer to the head
+    SOPID = OrderedDict(sorted(SOPID.items(), key=lambda t : t[0], reverse=True))
+    
+    layer = 0
+    for key, value in SOPID.items():
+        imageBlock[:, :, layer] = images[key][1]
         layer += 1
     
     return imageBlock, SOPID
