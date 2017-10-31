@@ -4,7 +4,7 @@ import os
 import sys
 import glob
 from collections import Counter,OrderedDict
-import settings
+import AlgoEngine.settings as settings
 import cv2
 import dicom
 
@@ -96,21 +96,26 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
     block_shape : tuple
         The shape of the CT block, in the format (height,
         width, number_of_ct_scans)
+
     slice_position_z : 1D NdArray
         The z coordinates of every CT scan for a patient.
+
     contour_data : dict of 2D NdArray
         Contains contour data (coordinates of contour perimeter)
         as specified by the clinician who entered them. Key
         for contour_data should be ReferencedSOPInstanceUID
         from the structureset dicom file.
+
     image_orientation : dict
         Contains image orientation data from dicom field
         ImageOrientationPatient for each ROI plane (subset
         of CT images). Key is also ReferencedSOPInstanceUID.
+
     image_position : dict
         Contains image position data from dicom field
         ImagePositionPatient for each ROI plane (subset
         of CT images). Key is also ReferencedSOPInstanceUID.
+
     pixel_spacing : dict
         Contains pixel spacing data from dicom field
         PixelSpacing for each ROI plane (subset
@@ -121,13 +126,14 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
     contour_block : 3D NdArray
         A 3D array of dimensions specified by block_shape. 
         Contains 1s at coordinates of contour and 0s elsewhere.
+
     roi_block : 3D NdArray
         A 3D array of dimensions specified by block_shape.
         Contains 1s on and inside contour perimeter and 0s
         elsewhere.
     """
-    contour_block = np.zeros((block_shape)).astype(np.int)
-    roi_block = np.zeros((block_shape)).astype(np.int)
+    contour_block = np.zeros((block_shape)).astype(np.int8)
+    roi_block = np.zeros((block_shape)).astype(np.int8)
 
     for sop in contour_data:
 
@@ -222,13 +228,3 @@ def getImageBlock(patientID):
     
     return imageBlock, SOPID
  
-
-#if __name__ == '__main__':
-#    patientID = 'UCLA_PR_5'
-#    imageBlock,SOPID = get_ct_image_block(patientID)
-#     print(imageBlock.shape)
-#     print(SOPID)
-#    for index in range(300):
-#        plt.figure(index)
-#        plt.imshow(imageBlock[:,:,index],cmap=plt.get_cmap('gray'))
-#plt.show()
