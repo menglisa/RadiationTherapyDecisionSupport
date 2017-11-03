@@ -1,6 +1,6 @@
 import numpy as np
 from math import sqrt
-
+from AlgoEngine.utils import getVolume, getContours
 
 def getNormalizedHistogram(bin_amts, volume):
 	"""
@@ -12,6 +12,7 @@ def getNormalizedHistogram(bin_amts, volume):
 	bin_amts : 1D NdArray
 		Contains the number of pixels at a given distance,
 		specified in `bin_vals` returned from `getHistogram`
+
 	volume : int 
 		Contains the number of pixels in the ROI
 
@@ -49,6 +50,7 @@ def getHistogram(oar_dists, oar_roi_block, n_bins):
 	bin_vals : 1D NdArray
 		A vector of length `n-bins + 1`. Contains the bin intervals starting at
 		minimum distance, ending at maximum distance.
+
 	bin_amts : 1D NdArray
 		A vector of length `n_bins`. Contains the number of OAR voxels in each
 		bin interval. The kth element in `bin_amts`contains the number of OAR
@@ -150,3 +152,55 @@ def getOVHDistances(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing
 	    oar_dists[oar_ni_row[oar_voxel], oar_ni_col[oar_voxel], oar_ni_slice[oar_voxel]] = min_distance
 
 	return oar_dists
+
+
+def getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing, 
+	row_spacing, column_spacing, slice_spacing, n_bins):
+	"""
+	Gets a complete OVH histogram given preprocessed DICOM inputs. For use with managers / other wrapper
+	classes to get data effectively.
+
+	Parameters
+	----------
+	oar_roi_block : 3D NdArray
+		A 3D array with 1s inside and on contour perimeter of OAR ROI and 0s elsewhere.
+
+	ptv_contour_block : 3D NdArray
+		A 3D array with 1s on contour perimeter of PTV and 0s elsewhere.
+
+	ptv_roi_block : 3D NdArray
+		A 3D array with 1s inside and on contour perimeter of PTV ROI and 0s elsewhere.
+
+    row_spacing : float
+		Spacing between rows of CT image
+
+	column_spacing : float
+		Spacing between columns of CT image
+
+	slice_spacing : float
+		Spacing between slices (separate CT images) of CT block
+
+	n_bins : int
+		Contains the number of bins the user desires for histogram generation.
+		A greater amount of bins may give more accurate hisotgrams but will
+		result in longer runtims.
+
+
+	Returns
+	-------
+	bin_vals : 1D NdArray
+		A vector of length `n-bins + 1`. Contains the bin intervals starting at
+		minimum distance, ending at maximum distance.
+
+	norm_bin_amts : 1D NdArray
+		Contains the percentage of pixels at a given distance
+		or less
+
+	"""
+	
+	oar_dists = getOVHDistances(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing, column_spacing, slice_spacing)
+	bin_vals, bin_amts = getHistogram(oar_dists, oar_roi_block, n_bins)
+	volume = getVolume(oar_roi_block)
+	norm_bin_amts = getNormalizedHistogram(bin_amts, volume)
+	
+	return bin_vals, norm_bin_amts

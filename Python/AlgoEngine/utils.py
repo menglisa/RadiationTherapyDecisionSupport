@@ -227,4 +227,3 @@ def getImageBlock(patientID):
         layer += 1
     
     return imageBlock, SOPID
- 
