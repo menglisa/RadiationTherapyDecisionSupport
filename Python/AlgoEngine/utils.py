@@ -2,6 +2,7 @@ import numpy as np
 from skimage.draw import polygon
 import os
 import sys
+sys.path.append('..')
 import glob
 from collections import Counter,OrderedDict
 import AlgoEngine.settings as settings

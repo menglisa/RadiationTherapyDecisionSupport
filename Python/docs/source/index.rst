@@ -40,3 +40,18 @@ Primary target volume (PTV) and a single organ at risk (OAR)
 .. autofunction:: getHistogram
 .. autofunction:: getNormalizedHistogram
 .. autofunction:: getOVHDistances
+
+STS Functions
+=============
+
+Functions specific to computing the Spatial Transform Signature (STS) for a given
+Primary target volume (PTV) and a single organ at risk (OAR)
+
+
+.. automodule:: sts
+
+.. autofunction:: getSTSHistogram
+.. autofunction:: getDistance
+.. autofunction:: getElevation
+.. autofunction:: getAzimuth
+.. autofunction:: getCentroid

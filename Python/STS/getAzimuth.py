@@ -1,6 +1,6 @@
 from getDistance import getDistance
 from getElevation import getElevation
-
+import numpy as np
 from math import acos
 
 

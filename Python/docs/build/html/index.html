@@ -317,6 +317,173 @@ surface. Note that distance is negative for an OAR voxel inside the PTV.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="sts-functions">
+<h1>STS Functions<a class="headerlink" href="#sts-functions" title="Permalink to this headline">¶</a></h1>
+<p>Functions specific to computing the Spatial Transform Signature (STS) for a given
+Primary target volume (PTV) and a single organ at risk (OAR)</p>
+<span class="target" id="module-sts"></span><dl class="function">
+<dt id="sts.getSTSHistogram">
+<code class="descclassname">sts.</code><code class="descname">getSTSHistogram</code><span class="sig-paren">(</span><em>ptv_roi_block</em>, <em>oar_roi_block</em>, <em>n_bins</em><span class="sig-paren">)</span><a class="headerlink" href="#sts.getSTSHistogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the vectors for an STS histogram.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ptv_roi_block</strong> : 3d Ndarray</p>
+<blockquote>
+<div><p>A 3D array of dimensions h x w  x num_cts. 
+Contains 1s on and inside PTV contour perimeter and 0s elsewhere.</p>
+</div></blockquote>
+<p><strong>oar_roi_block</strong> : 3d Ndarray</p>
+<blockquote>
+<div><p>A 3D array of dimensions h x w  x num_cts. 
+Contains 1s on and inside OAR contour perimeter and 0s elsewhere.</p>
+</div></blockquote>
+<p><strong>n_bins</strong> : int</p>
+<blockquote>
+<div><p>Number of bins to use in histogram.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>elevation_bins</strong> : 1D NdArray</p>
+<blockquote>
+<div><p>Intervals for elevation which each value falls into. Length is <cite>n_bins</cite>.</p>
+</div></blockquote>
+<p><strong>distance_bins</strong> : 1D NdArray</p>
+<blockquote>
+<div><p>Intervals for distance which each value falls into. Length is <cite>n_bins</cite>.</p>
+</div></blockquote>
+<p><strong>azimuth_bins</strong> : 1D NdArray</p>
+<blockquote>
+<div><p>Intervals for azimuth which each value falls into. Length is <cite>n_bins</cite>.</p>
+</div></blockquote>
+<p><strong>amounts</strong> : 3D NdArray</p>
+<blockquote>
+<div><p>Dimensions are [elevation_bins, distance_bins, azimuth_bins]. Contains
+percentage of points in each interval, normalized but not cumulative.</p>
+</div></blockquote>
+<p><strong>amounts</strong> : 3D NdArray</p>
+<blockquote class="last">
+<div><p>Cumulative amounts. Dimensions are [elevation_bins, distance_bins, azimuth_bins]. Contains
+percentage of points in each interval, normalized and cumulative.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sts.getDistance">
+<code class="descclassname">sts.</code><code class="descname">getDistance</code><span class="sig-paren">(</span><em>ptv_vox</em>, <em>oar_cen</em><span class="sig-paren">)</span><a class="headerlink" href="#sts.getDistance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the radial distance between two voxels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ptv_vox</strong> : tuple</p>
+<blockquote>
+<div><p>Index location of PTV voxel</p>
+</div></blockquote>
+<p><strong>oar_cen</strong> : tuple</p>
+<blockquote>
+<div><p>Index location of OAR centroid</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>distance</strong> : int</p>
+<blockquote class="last">
+<div><p>Radial distance between voxels</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sts.getElevation">
+<code class="descclassname">sts.</code><code class="descname">getElevation</code><span class="sig-paren">(</span><em>ptv_vox</em>, <em>oar_cen</em><span class="sig-paren">)</span><a class="headerlink" href="#sts.getElevation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the elevation between two voxels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ptv_vox</strong> : tuple</p>
+<blockquote>
+<div><p>Index location of PTV voxel</p>
+</div></blockquote>
+<p><strong>oar_cen</strong> : tuple</p>
+<blockquote>
+<div><p>Index location of OAR centroid</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>elevation</strong> : int</p>
+<blockquote class="last">
+<div><p>Elevation between voxels</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sts.getAzimuth">
+<code class="descclassname">sts.</code><code class="descname">getAzimuth</code><span class="sig-paren">(</span><em>ptv_vox</em>, <em>oar_cen</em><span class="sig-paren">)</span><a class="headerlink" href="#sts.getAzimuth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the azimuth between two voxels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ptv_vox</strong> : tuple</p>
+<blockquote>
+<div><p>Index location of PTV voxel</p>
+</div></blockquote>
+<p><strong>oar_cen</strong> : tuple</p>
+<blockquote>
+<div><p>Index location of OAR centroid</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>azimuth</strong> : double</p>
+<blockquote class="last">
+<div><p>Azimuth angle between voxels (in radians)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sts.getCentroid">
+<code class="descclassname">sts.</code><code class="descname">getCentroid</code><span class="sig-paren">(</span><em>roi_block</em><span class="sig-paren">)</span><a class="headerlink" href="#sts.getCentroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the centroid (center) of an ROI_block</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>roi_block</strong> : 3D NdArray</p>
+<blockquote>
+<div><p>An array of dims [h x w x num_cts] where all 1s indicate
+points inside the ROI.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>centroid</strong> : 1D NdArray</p>
+<blockquote class="last">
+<div><p>An array of length 3, where the elements are [x, y, z]
+coordinate of the centroid respectively</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 
 
           </div>
