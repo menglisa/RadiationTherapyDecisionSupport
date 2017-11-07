@@ -1,1 +1,4 @@
-DATA_PATH = '/home/radiation/RadiationTherapyDecisionSupport/data/'
+hostname = ''
+username = ''
+password = ''
+database = ''
