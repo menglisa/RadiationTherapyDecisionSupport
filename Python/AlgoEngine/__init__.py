@@ -1,3 +1,4 @@
+""""
 import MySQLdb
 import numpy as np
 import collections
@@ -97,6 +98,7 @@ class AlgoManager():
         self.feature_extraction()
 
         self.similarity_calculation()
+"""
 
 
 

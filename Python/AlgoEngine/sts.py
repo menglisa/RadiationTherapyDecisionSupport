@@ -76,23 +76,25 @@ def getSTSHistogram(ptv_roi_block, oar_roi_block, n_bins):
                                     np.expand_dims(np.array(distance_max), axis=0)))
     azimuth_bins = np.concatenate((np.arange(azimuth_min,azimuth_max,azimuth_delta), 
                                    np.expand_dims(np.array(azimuth_max), axis=0)))
-    amounts = np.zeros((elevation_bins.shape[0] - 1, distance_bins.shape[0] - 1, azimuth_bins.shape[0] -1))
+    amounts = np.zeros((elevation.shape[0], 4)).astype(np.float32)
+    
+    amount = 0.0
+    count = 0
 
     for i in range(0, elevation_bins.shape[0] - 1):
         for j in range(0, distance_bins.shape[0] - 1):
             for k in range(0, azimuth_bins.shape[0] - 1):
-                amounts[i,j,k] = np.count_nonzero((elevation >= elevation_bins[i]) & 
+                amount = np.count_nonzero((elevation >= elevation_bins[i]) & 
                     (elevation < elevation_bins[i+1]) & (distance >= distance_bins[j]) 
                     & (distance < distance_bins[j+1]) & (azimuth >= azimuth_bins[k]) & 
                     (azimuth < azimuth_bins[k+1]))
+                amounts[count] = np.array([elevation_bins[i], 
+                                           distance_bins[j], azimuth_bins[k], amount]).astype(np.float32)
+                count += 1
 
-    amounts = amounts/getVolume(ptv_roi_block)
+    amounts[:, 3] = amounts[:, 3] /getVolume(ptv_roi_block)
 
-    cum_amounts = np.cumsum(amounts, axis=0)
-    cum_amounts = np.cumsum(cum_amounts, axis=1)
-    cum_amounts = np.cumsum(cum_amounts, axis=2)
-
-    return elevation_bins, distance_bins, azimuth_bins, amounts, cum_amounts
+    return elevation_bins, distance_bins, azimuth_bins, amounts
 
 
 def getElevation(ptv_vox, oar_cen):
