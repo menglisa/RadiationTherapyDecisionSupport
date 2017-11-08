@@ -10,6 +10,36 @@ import cv2
 import dicom
 
 
+def getROINumber(structureset, roi_name):
+    """
+    Returns the number associated with a given ROI in the DICOM file.
+
+    Parameters
+    ----------
+    structureset : DICOM dict
+        The DICOM file read in by `dicom.read_file`. 
+
+    roi_name : string
+        The name of the ROI, for example `'bladder'` or `'PTV'`
+
+    Returns
+    -------
+    return : int
+        The number associated with the ROI in the DICOM file
+
+
+    """
+
+
+
+    for n in range(0, len(structureset.StructureSetROISequence)):
+        if structureset.StructureSetROISequence[n].ROIName == roi_name:
+            return structureset.StructureSetROISequence[n].ROINumber
+
+    return -1
+
+
+
 def getVolume(roi_block):
     """
     Returns the volume of an ROI as the number of voxels it contains

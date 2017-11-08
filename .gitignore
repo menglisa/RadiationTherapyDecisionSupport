@@ -5,3 +5,12 @@
 /.idea
 Python/OVH/.ipynb_checkpoints
 Python/General/.ipynb_checkpoints
+
+# Ignore dot (hidden) folders
+.*/
+
+
+# Ignore additional extracted patients
+data/UCLA_PR_6
+data/UCLA_PR_7
+data/UCLA_PR_8
