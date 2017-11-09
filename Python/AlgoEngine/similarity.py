@@ -54,3 +54,33 @@ def getOVHEmd(query_bin_vals, query_bin_amts, historical_bin_vals, historical_bi
 
 	emd = cv2.EMD(query_hist, historical_hist, distType=2)[0]
 	return emd
+
+
+def getSTSEmd(query_sts, historical_sts):
+	"""
+	Returns the Earth Mover's distance for a single PTV-OAR pair's spatial transformation signature.
+
+	Parameters
+	----------
+	query_sts : 2D NdArray
+		An array of [pix, 4] dimensions, where `pix` is the number of pixels in the ROI, and the columns
+		are [elevation, distance, azimuth, percentage pixels] respectively for the query study.
+
+	historical_sts : 2D NdArray
+		An array of [pix, 4] dimensions, where `pix` is the number of pixels in the ROI, and the columns
+		are [elevation, distance, azimuth, percentage pixels] respectively for the historical study.
+
+	Returns
+	-------
+	emd : float
+		The scalar earth mover's distance (dissimilarity) between the two study pairs.
+	"""
+	weights_hist = np.ones((historical_sts.shape[0], 1))
+	weights_query = np.ones((query_sts.shape[0], 1))
+
+	query_hist = np.array(np.concatenate((weights_query, query_sts), axis=1)).astype(np.float32)
+	historical_hist = np.array(np.concatenate((weights_hist, historical_sts), axis=1)).astype(np.float32)
+
+	emd = cv2.EMD(query_hist, historical_hist, distType=2)[0]
+	return emd
+	
