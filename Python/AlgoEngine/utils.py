@@ -1,10 +1,11 @@
 import numpy as np
 from skimage.draw import polygon
+import scipy.misc as misc
 import os
 import sys
 sys.path.append('..')
 import glob
-from collections import Counter,OrderedDict
+from collections import Counter,OrderedDict, defaultdict
 import AlgoEngine.settings as settings
 import cv2
 import dicom
@@ -29,8 +30,6 @@ def getROINumber(structureset, roi_name):
 
 
     """
-
-
 
     for n in range(0, len(structureset.StructureSetROISequence)):
         if structureset.StructureSetROISequence[n].ROIName == roi_name:
@@ -60,7 +59,49 @@ def getVolume(roi_block):
     return volume
 
 
-def getIsodose(dose_grid, DoseGridScaling):
+def _convertIsodoseCoordinates(temp_array, x0, y0, x_spacing, y_spacing):
+    """
+
+    Returns the rows and columns of each point of a given isodose value
+
+    Parameters
+    ----------
+    temp_mask : 2d NdArray
+        Contains dose data in dose array space. Is to be converted to CT array space.
+
+    x0 : float
+        Initial position (x) of isodose with respect to the CT scan. Used for aligning Isodose onto the CT scan
+
+    y0 : float 
+        Initial position (y) of isodose with respect to the CT scan. Used for aligning Isodose onto the CT scan
+
+    x_spacing : float
+        Pixel spacing of CT scan in the x direction
+
+    y_spacing : float
+        Pixel spacing of CT scan in the y direction
+        
+    Returns
+    -------
+    row : 1D NdArray
+        Rows of each dose contour as corrected to CT array space
+
+    col : 1D NdArray
+        Columns of each dose contour as corrected to CT array space
+    """
+
+    temp_mask = misc.imresize((temp_array == 255), (temp_array.shape[0] * x_spacing, 
+                                                    temp_array.shape[1] * y_spacing), 'nearest')
+
+    row, col = np.nonzero(temp_mask)
+    
+    row = row + y0
+    col = col + x0
+
+    return row, col
+
+
+def getIsodose(dose_grid, DoseGridScaling, x0, y0, x_spacing, y_spacing, sopUID):
     """
     Returns 2D isodose wash (contours of each dose)
     
@@ -69,55 +110,136 @@ def getIsodose(dose_grid, DoseGridScaling):
     dose_grid: 3D NdArray
         Dose values in the format (number_of_ct_scans, height, width)
     
-    DoseGridScaling: floating point
+    DoseGridScaling: float
         Scaling factor that when multiplied by dose bin widths (from dose_grid), yields dose bin widths in correct units 
+
+    x0 : float
+        Initial position (x) of isodose with respect to the CT scan. Used for aligning Isodose onto the CT scan
+
+    y0 : float 
+        Initial position (y) of isodose with respect to the CT scan. Used for aligning Isodose onto the CT scan
+
+    x_spacing : float
+        Pixel spacing of CT scan in the x direction
+
+    y_spacing : float
+        Pixel spacing of CT scan in the y direction
+
+    sopUID : Dict of strings
+        the Study IDs for each CT scan, in order. Used for indexing each slice of the dose grid by corresponding CT
+        scan. 
         
     Returns
     -------
-    doseBlocks: 4D NdArray
-         Array wit all dose contours of varying values (40%, 50%, etc.) in one block in the format (height, width, RGB channel, number_of_ct_scan]
+    isodose: Dict of Dict of 1D NdArray
+         Array with outer dict key as SOPID and inner dict key as isodose value (percentage). Contains the rows
+         and columns in the specified CT scan where the dose is greater than the percentage specified by the inner
+         key.
     
     """
     
     dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
-    
-    dose_grid = np.expand_dims(dose_grid, axis=2)
-    dose_grid = np.repeat(dose_grid, 3, axis=2)
-    
+
     maxDose = np.max(dose_grid)
-    dose_grid = dose_grid/maxDose
-    
+    dose_grid = dose_grid / maxDose
+
     isodoseValues = np.array([40, 50, 60, 70, 80, 90, 95])
-    
-    doseBlocks = np.zeros(dose_grid.shape).astype(np.uint8)
-    
- 
-        
-    for n in range(0, len(isodoseValues)):
+
+    sopIDs = list(sopUID.values())
+
+    isodose = defaultdict(dict)
+
+    for j in range(0, dose_grid.shape[2]):
+
 
         tempDoseMask = np.zeros(dose_grid.shape).astype(np.uint8)
-        doseOutline = np.zeros(dose_grid.shape).astype(np.uint8)
 
-        doseMask = dose_grid > isodoseValues[n]*0.01 # removed maxDose 
-        tempDoseMask[doseMask] = 1;
+        for n in range(0, len(isodoseValues)):
 
-        for j in range(0, dose_grid.shape[3]):
-            for channel in range(0, 3):
-                temp_temp_mask = np.array(tempDoseMask[:,:,channel,j]).astype(np.uint8)
-                doseOutline[:,:,channel,j], contours, hierarchy = cv2.findContours(temp_temp_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            doseMask = dose_grid > isodoseValues[n]*0.01 
+            tempDoseMask[doseMask] = 1;
 
-                temp_array = np.zeros(doseOutline[:,:,channel,j].shape).astype(np.uint8)
+            temp_uint8_mask = np.array(tempDoseMask[:,:,j]).astype(np.uint8)
+            doseOutline, contours, hierarchy = cv2.findContours(temp_uint8_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            temp_array = np.zeros(doseOutline.shape).astype(np.uint8)
 
-                cv2.drawContours(temp_array, contours, -1, 255, 1)
-                temp_mask = temp_array == 255
-                temp_array[temp_mask] = 255 * isodoseValues[n] / 100;
-                doseBlocks[:,:,channel,j][temp_mask] = temp_array[temp_mask];   
-                                                                                  
-    return doseBlocks
+            cv2.drawContours(temp_array, contours, -1, 255, 1)
+            
+            row, col = _convertIsodoseCoordinates(temp_array, x0, y0, x_spacing, y_spacing)
+
+            rc = np.concatenate((np.expand_dims(row, axis=1), np.expand_dims(col, axis=1)), axis=1)
+
+            isodose[sopIDs[j]] [isodoseValues[n]] = rc  
+                                                                                      
+    return isodose
 
 
-def getContours(block_shape, slice_position_z, contour_data, image_orientation, image_position, pixel_spacing):
+def getMeanTargetDose(ptv_roi_block, block_shape, dose_grid, DoseGridScaling, x0, y0, x_spacing, y_spacing, sopUID):
+    """
+    
+    Returns mean dose, as an absolute value scaled by `DoseGridScaling`, from inside the PTV.
+    
+    Parameters
+    ----------
+    ptv_roi_block : 3D NdArray
+        A 3D array of dimensions specified by block_shape.
+        Contains 1s on and inside PTV contour perimeter and 0s
+        elsewhere.
+
+    block_shape : tuple
+        The shape of the CT block, in the format `(height,
+        width, number_of_ct_scans)`
+
+    DoseGridScaling: float
+        Scaling factor that when multiplied by dose bin widths (from dose_grid), yields dose bin widths in correct units 
+
+    x0 : float
+        Initial position (x) of isodose with respect to the CT scan. Used for aligning Isodose onto the CT scan
+
+    y0 : float 
+        Initial position (y) of isodose with respect to the CT scan. Used for aligning Isodose onto the CT scan
+
+    x_spacing : float
+        Pixel spacing of CT scan in the x direction
+
+    y_spacing : float
+        Pixel spacing of CT scan in the y direction
+
+    sopUID : Dict of strings
+        the Study IDs for each CT scan, in order. Used for indexing each slice of the dose grid by corresponding CT
+        scan. 
+        
+    Returns
+    -------
+    dose_mean : float
+         Scalar mean dose of doses inside PTV contour
+    
+    """
+    dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
+    dose_grid = dose_grid * DoseGridScaling
+
+    dose_array = np.zeros(block_shape).astype(np.float32)
+
+    for j in range(0, dose_grid.shape[2]):
+
+        temp_array = dose_grid[:, :, j].astype(np.float32)
+
+        temp_mask = misc.imresize(temp_array, (temp_array.shape[0] * x_spacing, 
+                                                    temp_array.shape[1] * y_spacing), 'nearest', mode='F')
+        
+        x_max = np.min((block_shape[0], temp_mask.shape[0] + x0))
+        y_max = np.min((block_shape[0], temp_mask.shape[0] + y0))
+
+        dose_array[x0 : x_max, y0 : y_max, j] = temp_mask[:x_max - x0, :y_max - y0]
+
+    dose_mean = np.mean(dose_array[ptv_roi_block == 1])
+
+    return dose_mean
+
+
+def getContours(block_shape, slice_position_z, contour_data, 
+    image_orientation, image_position, pixel_spacing):
     """
     Returns the contour (perimeter) of a specified ROI, and
     the ROI mask of a specified ROI.
@@ -208,7 +330,7 @@ def getContours(block_shape, slice_position_z, contour_data, image_orientation, 
     return contour_block, roi_block
 
 
-def getImageBlock(patientID):
+def getImageBlock(patientID, DATA_PATH):
     """
     Numpy array of CT_IMAGE_BLOCK [height x width x num_ct_scans].
     Array is ordered such that first image is head, last is feet.
@@ -217,6 +339,9 @@ def getImageBlock(patientID):
     ----------
     patientID : string
         The unique identifier for patient
+
+    DATA_PATH : string
+        The abosolute local path location where dicom CT scan files are stored.
         
     Returns
     -------
@@ -226,11 +351,6 @@ def getImageBlock(patientID):
         The list of UID, in the order as the slice
     """
 
-
-    ##find the files through file storage system and use the code left
-    ####Test parameter####
-    DATA_PATH = settings.DATA_PATH
-    #####################
     ct_files = glob.glob(DATA_PATH + patientID + '/' + 'CT*.dcm')
     num_ct_scans = len(ct_files)
     SOPID = OrderedDict()

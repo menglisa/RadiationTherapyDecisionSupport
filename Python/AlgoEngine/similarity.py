@@ -83,4 +83,25 @@ def getSTSEmd(query_sts, historical_sts):
 
 	emd = cv2.EMD(query_hist, historical_hist, distType=2)[0]
 	return emd
-	
+
+
+def getTDDistance(query_dose_mean, historical_dose_mean):
+	"""
+	Returns the absolute L1 distance between the query and historical dose means from the same PTV.
+
+	Parameters
+	----------
+	query_dose_mean : float
+		A float representing the mean dose inside the PTV ROI in the query case
+
+	historical_dose_mean : float
+		Represents the mean dose inside the PTV ROI of the historical case
+
+	Returns
+	-------
+	dose_distance : float
+		A scalar of the L1 distance between the query and historical dose means.
+	"""
+
+	dose_distance = np.abs(query_dose_mean - historical_dose_mean)
+	return dose_distance
