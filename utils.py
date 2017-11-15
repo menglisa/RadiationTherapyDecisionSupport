@@ -11,15 +11,6 @@ import cv2
 import dicom
 
 
-def dicom_to_string(df):
-    return ','.join([str(data_str) for data_str in df])
-
-
-#convert string to list
-def string_to_list(dbTextfiled):
-    return dbTextfiled.split(',')
-
-
 def getROINumber(structureset, roi_name, excluding=[]):
     """
     Returns the number associated with a given ROI in the DICOM file.

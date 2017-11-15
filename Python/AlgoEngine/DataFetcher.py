@@ -1,14 +1,50 @@
 import MySQLdb
 import settings
-
+from sshtunnel import SSHTunnelForwarder
+from utils import *
 #in order to use this AlgoEngine separately, we build this datafetcher by using MySQLdb instead of Django ORM
 #it can also be implemented with Django ORM
 
+query_for_study_list = 'SELECT id from studies WHERE id NOT IN (%s)'
+query_for_roi_list = 'SELECT * from rt_rois WHERE fk_study_id_id = 1'
+query_for_contour = 'SELECT * from rt_contour WHERE fk_roi_id_id = %s AND fk_structureset_id_id = %s'
+query_for_image_plane_info = 'SELECT * from ct_images WHERE SOPInstanceUID = %s'
 class DataFetcher():
     def __init__(self):
         #build connection
         #save the connection with the class
-        self.db_connection = MySQLdb.connect(settings.hostname, settings.username,settings.password, settings.database)
+
+        #define some prepared statement to fetch data
+        #usin ssh tunnel
+        self.server = SSHTunnelForwarder((settings.ssh_hostname, settings.ssh_port), ssh_username=settings.ssh_username,
+                                    ssh_password=settings.ssh_password,
+                                        remote_bind_address=('127.0.0.1', 3306))
+        self.server.start()
+
+        self.connection = MySQLdb.connect('127.0.0.1',port = self.server.local_bind_port,
+                          user = settings.database_username,passwd = settings.database_password,db = settings.database_name)
+
+        self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
+
+    #with these two functions, we could use with statement with instance of this class
+    #because we use with statement with db connection, we want to inherit this convention
+    def __enter__(self):
+        return DataFetcher()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("exit the context manager")
+        #close the db connection
+        if self.connection:
+            print("close connection")
+            self.connection.close()
+
+        #close the ssh connection
+        if self.server:
+            print("close the server")
+            self.server.stop()
+
+        print("finish the exit process")
 
     def get_contours(self,studyID):
         '''
@@ -27,6 +63,44 @@ class DataFetcher():
             ROI:contourBlock
         }
         '''
+        self.cursor.execute(query_for_roi_list)
+        rois = self.cursor.fetchall()
+        res = {}
+        for roi in rois:
+            roi_name = roi['ROIName']
+            self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
+            contour_dict = {}
+            imagePatientOrientaion = []
+            imagePatientPosition = {}
+            pixelSpacing = None
+            block_shape = []
+            Contours = self.cursor.fetchall()
+            for contour in Contours:
+                contour_dict[contour['ReferencedSOPInstanceUID']] = contour['ContourData']
+                #print(contour['ReferencedSOPInstanceUID'])
+                self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
+                image_info = self.cursor.fetchall()[0]
+                if not imagePatientOrientaion:
+                    imagePatientOrientaion = image_info['ImageOrientationPatient'][0]
+                if not pixelSpacing:
+                    pixelSpacing = image_info['PixelSpacing']
+                if not block_shape:
+                    block_shape = (image_info['Rows'], image_info['Columns'])
+                imagePatientPosition[contour['ReferencedSOPInstanceUID']] = image_info['ImagePositionPatient']
+
+            # call utils function to reorganize the things in block
+            # block_shape, slice_position_z, contour_data, image_orientation, image_position, pixel_spacing
+
+            #Change the definition of this function a little bit
+            contour_block,roi_block = getContours(block_shape, contour_dict, image_orientation=imagePatientOrientaion,
+                                        image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
+
+
+            #return a list with 2 elements, the first one is PTV, second one is OAR
+            res[roi_name] = contour_dict
+
+        return res
+
     def save_ovh(self,SourceOAR,TargetOAR,hist,StudyID):
         '''
         save ovh every time we have
@@ -43,12 +117,15 @@ class DataFetcher():
         '''
         pass
 
+    #I don't know how to get this value, so we don't consider this right now
     def get_target_dose(self,studyID):
         '''
         get the target dose for this studyID
         :param studyID:
         :return:
         '''
+        pass
+
 
     def get_ovh(self,studyID):
         '''
@@ -81,7 +158,9 @@ class DataFetcher():
         :param studyID: is to eliminate the study belongs to the same patient
         :return: a list
         '''
-        pass
+        self.cursor.execute(query_for_study_list,str(studyID))
+        study_list = self.cursor.fetchall()
+        return list(study_list)
 
     def fetch_similarity(self,studyID):
         '''
