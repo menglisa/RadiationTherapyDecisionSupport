@@ -11,9 +11,11 @@ import cv2
 import dicom
 
 
-def getROINumber(structureset, roi_name):
+def getROINumber(structureset, roi_name, excluding=[]):
     """
     Returns the number associated with a given ROI in the DICOM file.
+    We return the first number which has `roi_name` as a substring
+    and is not in the `excluding` optional input argument.
 
     Parameters
     ----------
@@ -22,6 +24,10 @@ def getROINumber(structureset, roi_name):
 
     roi_name : string
         The name of the ROI, for example `'bladder'` or `'PTV'`
+
+    excluding : List of strings
+        The previously processed ROIs of the same type. Used in the 
+        event, primarily, of multiple PTVs. 
 
     Returns
     -------
@@ -32,7 +38,8 @@ def getROINumber(structureset, roi_name):
     """
 
     for n in range(0, len(structureset.StructureSetROISequence)):
-        if structureset.StructureSetROISequence[n].ROIName == roi_name:
+        roi_name_query = structureset.StructureSetROISequence[n].ROIName 
+        if roi_name in roi_name_query and roi_name_query not in excluding:
             return structureset.StructureSetROISequence[n].ROINumber
 
     return -1
@@ -137,8 +144,6 @@ def getIsodose(dose_grid, DoseGridScaling, x0, y0, x_spacing, y_spacing, sopUID)
          key.
     
     """
-    
-    dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
 
     maxDose = np.max(dose_grid)
@@ -216,7 +221,7 @@ def getMeanTargetDose(ptv_roi_block, block_shape, dose_grid, DoseGridScaling, x0
          Scalar mean dose of doses inside PTV contour
     
     """
-    dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
+    # dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
 
     dose_array = np.zeros(block_shape).astype(np.float32)
@@ -227,15 +232,13 @@ def getMeanTargetDose(ptv_roi_block, block_shape, dose_grid, DoseGridScaling, x0
 
         temp_mask = misc.imresize(temp_array, (temp_array.shape[0] * x_spacing, 
                                                     temp_array.shape[1] * y_spacing), 'nearest', mode='F')
-        
+
         x_max = np.min((block_shape[0], temp_mask.shape[0] + x0))
-        y_max = np.min((block_shape[0], temp_mask.shape[0] + y0))
+        y_max = np.min((block_shape[1], temp_mask.shape[1] + y0))
 
         dose_array[x0 : x_max, y0 : y_max, j] = temp_mask[:x_max - x0, :y_max - y0]
 
-    dose_mean = np.mean(dose_array[ptv_roi_block == 1])
-
-    return dose_mean
+    return np.mean(dose_array[ptv_roi_block == 1])
 
 
 def getContours(block_shape, slice_position_z, contour_data, 
