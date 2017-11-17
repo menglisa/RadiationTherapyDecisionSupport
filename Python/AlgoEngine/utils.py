@@ -20,41 +20,6 @@ def string_to_list(dbTextfiled):
     return dbTextfiled.split(',')
 
 
-def getROINumber(structureset, roi_name, excluding=[]):
-    """
-    Returns the number associated with a given ROI in the DICOM file.
-    We return the first number which has `roi_name` as a substring
-    and is not in the `excluding` optional input argument.
-
-    Parameters
-    ----------
-    structureset : DICOM dict
-        The DICOM file read in by `dicom.read_file`. 
-
-    roi_name : string
-        The name of the ROI, for example `'bladder'` or `'PTV'`
-
-    excluding : List of strings
-        The previously processed ROIs of the same type. Used in the 
-        event, primarily, of multiple PTVs. 
-
-    Returns
-    -------
-    return : int
-        The number associated with the ROI in the DICOM file
-
-
-    """
-
-    for n in range(0, len(structureset.StructureSetROISequence)):
-        roi_name_query = structureset.StructureSetROISequence[n].ROIName 
-        if roi_name in roi_name_query and roi_name_query not in excluding:
-            return structureset.StructureSetROISequence[n].ROINumber
-
-    return -1
-
-
-
 def getVolume(roi_block):
     """
     Returns the volume of an ROI as the number of voxels it contains
@@ -153,6 +118,7 @@ def getIsodose(dose_grid, DoseGridScaling, x0, y0, x_spacing, y_spacing, sopUID)
          key.
     
     """
+    dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
 
     maxDose = np.max(dose_grid)
@@ -230,8 +196,9 @@ def getMeanTargetDose(ptv_roi_block, block_shape, dose_grid, DoseGridScaling, x0
          Scalar mean dose of doses inside PTV contour
     
     """
-    # dose_grid = np.swapaxes(np.swapaxes(dose_grid, 0, 2), 0, 1)
     dose_grid = dose_grid * DoseGridScaling
+
+    block_shape = block_shape + (ptv_roi_block.shape[2],)
 
     dose_array = np.zeros(block_shape).astype(np.float32)
 
@@ -250,7 +217,50 @@ def getMeanTargetDose(ptv_roi_block, block_shape, dose_grid, DoseGridScaling, x0
     return np.mean(dose_array[ptv_roi_block == 1])
 
 
-def getContours(block_shape, slice_position_z, contour_data, 
+def convertROIToCTSpace(roi_block, image_position, sopIDs):
+    """
+    Converts an ROI block of size `[h x w x num_rois]` to 
+    a CT block of size `[h x w x num_cts]`
+
+    Parameters
+    ----------
+    roi_block : 3D NdArray
+        A 3D array of dimensions specified by block_shape.
+        Contains 1s on and inside contour perimeter and 0s
+        elsewhere.
+
+    image_position : dict
+        Contains image position data from dicom field
+        ImagePositionPatient for each ROI plane (subset
+        of CT images). Key is also ReferencedSOPInstanceUID.
+
+    SOPIDs : Ordered Dict
+        Ordered by z variable, key is Z var, value is SOP ID.
+
+    Returns
+    -------
+    ct_roi_block : 3D NdArray
+        the `roi_block` with zeros intersped where there is no
+        ROI contour. 
+    """
+    ct_z = np.array(list(sopIDs.keys()), dtype=np.float32)
+
+    slice_position_z = np.zeros(roi_block.shape[2]).astype(np.float32)
+    for i, ct in enumerate(image_position.values()):
+        slice_position_z[i] = ct[2]
+    np.sort(slice_position_z)[::-1]
+
+
+    ct_roi_block = np.zeros((roi_block.shape[0], roi_block.shape[1], len(sopIDs))).astype(np.int8)
+
+    for i in range(0, slice_position_z.shape[0]):
+
+        ct_roi_block[:, :, np.argwhere(ct_z == slice_position_z[i])[0][0]] = roi_block[:, :, i]
+
+    return ct_roi_block
+
+
+def getContours(block_shape, contour_data, 
     image_orientation, image_position, pixel_spacing):
     """
     Returns the contour (perimeter) of a specified ROI, and
@@ -259,11 +269,8 @@ def getContours(block_shape, slice_position_z, contour_data,
     Parameters
     ----------
     block_shape : tuple
-        The shape of the CT block, in the format (height,
-        width, number_of_ct_scans)
-
-    slice_position_z : 1D NdArray
-        The z coordinates of every CT scan for a patient.
+        The shape of the CT block, in the format `(height,
+        width)`
 
     contour_data : dict of 2D NdArray
         Contains contour data (coordinates of contour perimeter)
@@ -297,6 +304,13 @@ def getContours(block_shape, slice_position_z, contour_data,
         Contains 1s on and inside contour perimeter and 0s
         elsewhere.
     """
+
+    slice_position_z = np.zeros(len(contour_data)).astype(np.float32)
+    for i, ct in enumerate(image_position.values()):
+        slice_position_z[i] = ct[2]
+    np.sort(slice_position_z)[::-1]
+
+    block_shape = block_shape + (len(contour_data),)
     contour_block = np.zeros((block_shape)).astype(np.int8)
     roi_block = np.zeros((block_shape)).astype(np.int8)
 
@@ -307,7 +321,7 @@ def getContours(block_shape, slice_position_z, contour_data,
         count = 0
         row_coordinates = np.zeros((contour_data[sop].shape[0])).astype(np.int)
         col_coordinates = np.zeros((contour_data[sop].shape[0])).astype(np.int)
-        plane_coor = np.argwhere(slice_position_z == z_coor)[0][0].astype(np.int)
+        plane_coor = np.argwhere(slice_position_z == z_coor).astype(np.int)
         
         for n in range(0, contour_data[sop].shape[0]):
             
@@ -359,7 +373,8 @@ def getImageBlock(patientID, DATA_PATH):
     -------
     imageBlock : 3d array
         The shape is height * width * num_ct_scans
-    uidList: list
+
+    SOPID : Ordered Dict
         The list of UID, in the order as the slice
     """
 

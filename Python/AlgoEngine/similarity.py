@@ -4,7 +4,7 @@ import sys
 sys.path.append('..')
 import cv2
 from AlgoEngine.ovh import getOVH
-from AlgoEngine.utils import getContours, getROINumber
+from AlgoEngine.utils import getContours
 from math import sqrt
 
 

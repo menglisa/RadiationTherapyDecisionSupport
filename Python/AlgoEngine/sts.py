@@ -31,13 +31,9 @@ def getSTSHistogram(ptv_roi_block, oar_roi_block, n_bins):
     azimuth_bins : 1D NdArray
         Intervals for azimuth which each value falls into. Length is `n_bins`.
 
-    amounts : 3D NdArray
-        Dimensions are [elevation_bins, distance_bins, azimuth_bins]. Contains
+    amounts : 2D NdArray
+        Dimensions are [num_combinations, 4]. Contains
         percentage of points in each interval, normalized but not cumulative.
-
-    amounts : 3D NdArray
-        Cumulative amounts. Dimensions are [elevation_bins, distance_bins, azimuth_bins]. Contains
-        percentage of points in each interval, normalized and cumulative.
 
     """
     centroid = getCentroid(oar_roi_block)
@@ -76,7 +72,9 @@ def getSTSHistogram(ptv_roi_block, oar_roi_block, n_bins):
                                     np.expand_dims(np.array(distance_max), axis=0)))
     azimuth_bins = np.concatenate((np.arange(azimuth_min,azimuth_max,azimuth_delta), 
                                    np.expand_dims(np.array(azimuth_max), axis=0)))
-    amounts = np.zeros((elevation.shape[0], 4)).astype(np.float32)
+
+    total_combinations = (elevation_bins.shape[0] - 1) * (distance_bins.shape[0] - 1) * (azimuth_bins.shape[0] - 1)
+    amounts = np.zeros((total_combinations, 4)).astype(np.float32)
     
     amount = 0.0
     count = 0
@@ -92,7 +90,7 @@ def getSTSHistogram(ptv_roi_block, oar_roi_block, n_bins):
                                            distance_bins[j], azimuth_bins[k], amount]).astype(np.float32)
                 count += 1
 
-    amounts[:, 3] = amounts[:, 3] /getVolume(ptv_roi_block)
+    amounts[:, 3] = amounts[:, 3] / getVolume(ptv_roi_block)
 
     return elevation_bins, distance_bins, azimuth_bins, amounts
 
