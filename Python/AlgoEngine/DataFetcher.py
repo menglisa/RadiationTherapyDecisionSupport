@@ -2,6 +2,18 @@ import MySQLdb
 import settings
 from sshtunnel import SSHTunnelForwarder
 from utils import *
+
+
+# Imports for STS / OVH / etc
+import sys
+sys.path.append('..')
+from General.utils import getContours, getMeanTargetDose
+from sts import getSTSHistogram
+from ovh import getOVH
+from similarity import getSTSEmd, getOVHEmd, getTDDistance
+
+
+
 #in order to use this AlgoEngine separately, we build this datafetcher by using MySQLdb instead of Django ORM
 #it can also be implemented with Django ORM
 
@@ -124,6 +136,8 @@ class DataFetcher():
         :param studyID:
         :return:
         '''
+        target_dose = getMeanTargetDose(ptv_roi_block, block_shape, dose_grid, 
+                          DoseGridScaling, x0, y0, x_spacing, y_spacing, sopUID)
         pass
 
 
