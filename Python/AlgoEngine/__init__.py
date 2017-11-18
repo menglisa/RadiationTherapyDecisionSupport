@@ -1,7 +1,9 @@
-""""
+
 import MySQLdb
 import numpy as np
 import collections
+from sts import getSTSHistogram
+from ovh import getOVH
 from DataFetcher import DataFetcher
 from similarity_calculation import cal_dissimilarity_ovh,cal_dissimilarity_sts,cal_dissimilarity_td,cal_similarity
 
@@ -25,12 +27,18 @@ class AlgoManager():
         :return sts: a histogram of sts feature
         :return td: target dose
         '''
-        Rois = self.data_fetcher.get_contours(self.queryStudyID)
-        PTV = Rois[0]
-        OAR = Rois[1]
-        for ptv_name,ptv_block in PTV.items():
-            for oar_name,oar_block in OAR.items():
-                ovh_hist,overlap_area = ovh.run(ptv_block, oar_block)
+        #Both PTV and OAR are dictionary
+        PTV,OAR = self.data_fetcher.get_contours(self.queryStudyID)
+
+        for ptv_name,ptv_tuple in PTV.items():
+            for oar_name,oar_tuple in OAR.items():
+                #in the tuple, the first one is contour block and the second one is roi block
+
+
+
+
+
+                ovh_hist,overlap_area = getOVH(oar_block,ptv_block, )
                 sts_hist = sts.run(ptv_block,oar_block)
                 self.data_fetcher.save_ovh(ptv_name,oar_name,ovh_hist,self.queryStudyID)
                 self.data_fetcher.save_sts(ptv_name,oar_name,sts_hist,self.queryStudyID)
@@ -98,7 +106,5 @@ class AlgoManager():
         self.feature_extraction()
 
         self.similarity_calculation()
-"""
-
 
 

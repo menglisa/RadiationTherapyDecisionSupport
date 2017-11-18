@@ -3,19 +3,20 @@ import settings
 from sshtunnel import SSHTunnelForwarder
 from types import *
 from utils import *
-# from DataFetcher import DataFetcher
-#
-#
-# try:
-#     with DataFetcher() as df:
-#         # contour_block = df.get_contours(1)
-#         # print(len(contour_block))
-#         study_list = df.get_dbstudy_list(1)
-#         print(study_list)
-# except:
-#     print("some error happens")
-#
-# print("end")
+from DataFetcher import DataFetcher
+
+
+try:
+    with DataFetcher() as df:
+        # contour_block = df.get_contours(1)
+        # print(len(contour_block))
+        ptv,oar = df.get_contours(2)
+        print(ptv.keys())
+        print(oar.keys())
+except:
+    print("some error happens")
+
+print("end")
 
 ########################################################################################################################
 #
@@ -23,28 +24,28 @@ from utils import *
 # query_for_roi_list = 'SELECT * from rt_rois WHERE fk_study_id_id = 1'
 # query_for_contour = 'SELECT * from rt_contour WHERE fk_roi_id_id = %s AND fk_structureset_id_id = %s'
 # query_for_image_plane_info = 'SELECT * from ct_images WHERE SOPInstanceUID = %s'
-server = SSHTunnelForwarder((settings.ssh_hostname,settings.ssh_port),ssh_username=settings.ssh_username,ssh_password=settings.ssh_password,
-                        remote_bind_address=('127.0.0.1',3306))
-server.start()
-
-con = MySQLdb.connect('127.0.0.1',port = server.local_bind_port,
-
-                     user = settings.database_username,passwd = settings.database_password,db = settings.database_name)
+# server = SSHTunnelForwarder((settings.ssh_hostname,settings.ssh_port),ssh_username=settings.ssh_username,ssh_password=settings.ssh_password,
+#                         remote_bind_address=('127.0.0.1',3306))
+# server.start()
 #
-cur = con.cursor(MySQLdb.cursors.DictCursor)
-cur.execute('SELECT ContourData from rt_contour WHERE id = 8140')
-
-data = cur.fetchall()
-print(len(data))
-
-contour = data[0]['ContourData']
-print(contour)
-
-
-
-con.close()
-
-server.stop()
+# con = MySQLdb.connect('127.0.0.1',port = server.local_bind_port,
+#
+#                      user = settings.database_username,passwd = settings.database_password,db = settings.database_name)
+# #
+# cur = con.cursor(MySQLdb.cursors.DictCursor)
+# cur.execute('SELECT ContourData from rt_contour WHERE id = 8140')
+#
+# data = cur.fetchall()
+# print(len(data))
+#
+# contour = data[0]['ContourData']
+# print(contour)
+#
+#
+#
+# con.close()
+#
+# server.stop()
 
 #
 # con.close()
