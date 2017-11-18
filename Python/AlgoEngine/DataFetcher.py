@@ -119,11 +119,12 @@ class DataFetcher():
                     self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
                     image_info = self.cursor.fetchall()[0]
                     if not imagePatientOrientaion:
-                        imagePatientOrientaion = image_info['ImageOrientationPatient'][0]
+                        imagePatientOrientaion = image_info['ImageOrientationPatient'].split(',')
                     if not pixelSpacing:
-                        pixelSpacing = image_info['PixelSpacing']
+                        pixelSpacing = image_info['PixelSpacing'].split(',')
                     if not block_shape:
                         block_shape = (image_info['Rows'], image_info['Columns'])
+
                     imagePatientPosition[contour['ReferencedSOPInstanceUID']] = image_info['ImagePositionPatient']
 
 
