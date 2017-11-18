@@ -4,10 +4,12 @@ from sshtunnel import SSHTunnelForwarder
 from types import *
 from utils import *
 from DataFetcher import DataFetcher
-
+import pdb
 
 df = DataFetcher()
-ptv, oar = df.get_contours('2')
+ptv, oar = df.get_contours('1')
+
+pdb.set_trace()
 
 """try:
     with DataFetcher() as df:

@@ -34,9 +34,11 @@ class AlgoManager():
             for oar_name,oar_tuple in OAR.items():
                 #in the tuple, the first one is contour block and the second one is roi block
 
+                oar_contour_block = oar_tuple[0]
+                oar_roi_block = oar_tuple[1]
 
-
-
+                ptv_contour_block = ptv_tuple[0]
+                ptv_roi_block = ptv_tuple[1]
 
                 ovh_hist,overlap_area = getOVH(oar_block,ptv_block, )
                 sts_hist = sts.run(ptv_block,oar_block)

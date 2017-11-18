@@ -85,63 +85,42 @@ class DataFetcher():
         print("Starting contour")
         for roi in rois:
             roi_name = roi['ROIName']
+            print(roi_name)
+            self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
+            contour_dict = {}
+            imagePatientOrientaion = {}
+            imagePatientPosition = {}
+            pixelSpacing = {}
+            block_shape = []
+            Contours = self.cursor.fetchall()
+            for contour in Contours:
+                contour_array = np.array(contour['ContourData'].split(','), dtype=np.float32)
+                contour_array = contour_array.reshape(contour_array.shape[0] // 3 , 3)
+
+                contour_dict[contour['ReferencedSOPInstanceUID']] = contour_array
+                #print(contour['ReferencedSOPInstanceUID'])
+                self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
+                image_info = self.cursor.fetchall()[0]
+                imagePatientOrientaion[contour['ReferencedSOPInstanceUID']] = np.array(image_info['ImageOrientationPatient'].split(','), dtype=np.float32)
+                pixelSpacing[contour['ReferencedSOPInstanceUID']] = np.array(image_info['PixelSpacing'].split(','), dtype=np.float32)
+                if not block_shape:
+                    block_shape = (image_info['Rows'], image_info['Columns'])
+
+                imagePatientPosition[contour['ReferencedSOPInstanceUID']] = np.array(image_info['ImagePositionPatient'].split(','), dtype=np.float32)
+
+
+            #Change the definition of this function a little bit
+            contour_block,roi_block = getContours(block_shape, contour_dict, image_orientation=imagePatientOrientaion,
+                                        image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
+
             if re.match(r'^PTV',roi_name,re.IGNORECASE):
-                self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
-                imagePatientOrientaion = []
-                imagePatientPosition = {}
-                pixelSpacing = None
-                block_shape = []
-                Contours = self.cursor.fetchall()
-                for contour in Contours:
-                    contour_dict[contour['ReferencedSOPInstanceUID']] = contour['ContourData']
-                    # print(contour['ReferencedSOPInstanceUID'])
-                    self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
-                    image_info = self.cursor.fetchall()[0]
-                    if not imagePatientOrientaion:
-                        imagePatientOrientaion = image_info['ImageOrientationPatient'][0]
-                    if not pixelSpacing:
-                        pixelSpacing = image_info['PixelSpacing']
-                    if not block_shape:
-                        block_shape = (image_info['Rows'], image_info['Columns'])
-                    imagePatientPosition[contour['ReferencedSOPInstanceUID']] = image_info['ImagePositionPatient']
-
-                    
-
-
-                contour_block, roi_block = getContours(block_shape, contour_dict,
-                                                       image_orientation=imagePatientOrientaion,
-                                                       image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
                 ptv_dict[roi_name] = (contour_block,roi_block)
             else:
-                self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
-                contour_dict = {}
-                imagePatientOrientaion = []
-                imagePatientPosition = {}
-                pixelSpacing = None
-                block_shape = []
-                Contours = self.cursor.fetchall()
-                for contour in Contours:
-                    contour_dict[contour['ReferencedSOPInstanceUID']] = np.array(contour['ContourData'].split(','))
-                    #print(contour['ReferencedSOPInstanceUID'])
-                    self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
-                    image_info = self.cursor.fetchall()[0]
-                    if not imagePatientOrientaion:
-                        imagePatientOrientaion = image_info['ImageOrientationPatient'].split(',')
-                    if not pixelSpacing:
-                        pixelSpacing = image_info['PixelSpacing'].split(',')
-                    if not block_shape:
-                        block_shape = (image_info['Rows'], image_info['Columns'])
-
-                    imagePatientPosition[contour['ReferencedSOPInstanceUID']] = image_info['ImagePositionPatient']
-
-
-                #Change the definition of this function a little bit
-                pdb.set_trace()
-                contour_block,roi_block = getContours(block_shape, contour_dict, image_orientation=imagePatientOrientaion,
-                                            image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
-
                 oar_dict[roi_name] = (contour_block,roi_block)
+            
+            print("Finished contour")
 
+        print("Done with all")
         return ptv_dict,oar_dict
 
     def save_ovh(self,SourceOAR,TargetOAR,hist,StudyID):
