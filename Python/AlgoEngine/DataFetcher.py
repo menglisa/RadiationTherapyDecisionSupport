@@ -1,14 +1,14 @@
 import MySQLdb
 import settings
 from sshtunnel import SSHTunnelForwarder
-from utils import *
+from AlgoEngine.utils import *
+import pdb
 
 
 
 # Imports for STS / OVH / etc
 import sys
 sys.path.append('..')
-from utils import getContours, getMeanTargetDose
 from sts import getSTSHistogram
 from ovh import getOVH
 from similarity import getSTSEmd, getOVHEmd, getTDDistance
@@ -38,6 +38,8 @@ class DataFetcher():
                           user = settings.database_username,passwd = settings.database_password,db = settings.database_name)
 
         self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        print("Finished loading data")
 
 
     #with these two functions, we could use with statement with instance of this class
@@ -80,6 +82,7 @@ class DataFetcher():
         rois = self.cursor.fetchall()
         ptv_dict = {}
         oar_dict = {}
+        print("Starting contour")
         for roi in rois:
             roi_name = roi['ROIName']
             if re.match(r'^PTV',roi_name,re.IGNORECASE):
@@ -101,6 +104,10 @@ class DataFetcher():
                     if not block_shape:
                         block_shape = (image_info['Rows'], image_info['Columns'])
                     imagePatientPosition[contour['ReferencedSOPInstanceUID']] = image_info['ImagePositionPatient']
+
+                    
+
+
                 contour_block, roi_block = getContours(block_shape, contour_dict,
                                                        image_orientation=imagePatientOrientaion,
                                                        image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
@@ -129,6 +136,7 @@ class DataFetcher():
 
 
                 #Change the definition of this function a little bit
+                pdb.set_trace()
                 contour_block,roi_block = getContours(block_shape, contour_dict, image_orientation=imagePatientOrientaion,
                                             image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
 
