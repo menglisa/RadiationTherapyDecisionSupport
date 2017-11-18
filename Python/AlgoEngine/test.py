@@ -6,7 +6,10 @@ from utils import *
 from DataFetcher import DataFetcher
 
 
-try:
+df = DataFetcher()
+ptv, oar = df.get_contours('2')
+
+"""try:
     with DataFetcher() as df:
         # contour_block = df.get_contours(1)
         # print(len(contour_block))
@@ -18,6 +21,8 @@ except:
 
 print("end")
 
+
+"""
 ########################################################################################################################
 #
 # query_for_study_list = 'SELECT * from studies'
