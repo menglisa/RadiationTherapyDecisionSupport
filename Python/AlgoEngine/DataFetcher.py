@@ -61,6 +61,34 @@ class DataFetcher():
 
         print("finish the exit process")
 
+    def get_spacing(self, studyID):
+        self.cursor.execute(query_for_roi_list,studyID)
+        rois = self.cursor.fetchall()
+        row_spacing = -1
+        column_spacing = -1
+        slice_thickness = -1
+
+        roi = rois[0]
+
+        self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
+        Contours = self.cursor.fetchall()
+
+        contour = Contours[0]
+
+        self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
+        image_info = self.cursor.fetchall()[0]
+        spacing_array = np.array(image_info['PixelSpacing'].split(','), dtype=np.float32)
+
+        row_spacing = spacing_array[0]
+        column_spacing = spacing_array[1]
+        slice_thickness = float(image_info['SliceThickness'])
+
+        return row_spacing, column_spacing, slice_thickness
+
+    def get_pixel_spacing(self, studyID):
+        return self.pixel_spacing
+
+
     def get_contours(self,studyID):
         '''
         Get contour block for all rois under this studyID
@@ -82,6 +110,7 @@ class DataFetcher():
         rois = self.cursor.fetchall()
         ptv_dict = {}
         oar_dict = {}
+
         print("Starting contour")
         for roi in rois:
             roi_name = roi['ROIName']
@@ -102,7 +131,10 @@ class DataFetcher():
                 self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
                 image_info = self.cursor.fetchall()[0]
                 imagePatientOrientaion[contour['ReferencedSOPInstanceUID']] = np.array(image_info['ImageOrientationPatient'].split(','), dtype=np.float32)
-                pixelSpacing[contour['ReferencedSOPInstanceUID']] = np.array(image_info['PixelSpacing'].split(','), dtype=np.float32)
+                
+                spacing_array = np.array(image_info['PixelSpacing'].split(','), dtype=np.float32)
+                pixelSpacing[contour['ReferencedSOPInstanceUID']] = spacing_array
+
                 if not block_shape:
                     block_shape = (image_info['Rows'], image_info['Columns'])
 
@@ -110,6 +142,7 @@ class DataFetcher():
 
 
             #Change the definition of this function a little bit
+            self.pixel_spacing = pixelSpacing
             contour_block,roi_block = getContours(block_shape, contour_dict, image_orientation=imagePatientOrientaion,
                                         image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
 

@@ -6,15 +6,20 @@ from sts import getSTSHistogram
 from ovh import getOVH
 from DataFetcher import DataFetcher
 from similarity_calculation import cal_dissimilarity_ovh,cal_dissimilarity_sts,cal_dissimilarity_td,cal_similarity
+import pdb
 
 class AlgoManager():
     '''
     attribute
     self.StudyIDs
     '''
-    def __init__(self):
+    def __init__(self, studyID):
         #create a datafetcher instance to fetch the data from the database
         self.data_fetcher = DataFetcher()
+
+        self.n_bins = 10
+
+        self.queryStudyID = studyID
 
 
 
@@ -29,6 +34,8 @@ class AlgoManager():
         '''
         #Both PTV and OAR are dictionary
         PTV,OAR = self.data_fetcher.get_contours(self.queryStudyID)
+        row_spacing, column_spacing, slice_thickness = self.data_fetcher.get_spacing(self.queryStudyID)
+        pixel_spacing = self.data_fetcher.get_pixel_spacing(self.queryStudyID)
 
         for ptv_name,ptv_tuple in PTV.items():
             for oar_name,oar_tuple in OAR.items():
@@ -40,8 +47,17 @@ class AlgoManager():
                 ptv_contour_block = ptv_tuple[0]
                 ptv_roi_block = ptv_tuple[1]
 
-                ovh_hist,overlap_area = getOVH(oar_block,ptv_block, )
-                sts_hist = sts.run(ptv_block,oar_block)
+                bin_vals, bin_amts = getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing,
+                            row_spacing, column_spacing, slice_thickness, self.n_bins)
+                ovh_hist = (bin_vals, bin_amts)
+
+                elevation_bins, distance_bins, azimuth_bins, amounts = getSTSHistogram(ptv_roi_block, oar_roi_block, self.n_bins)
+                sts_hist = (elevation_bins, distance_bins, azimuth_bins, amounts)
+
+                pdb.set_trace()
+
+
+
                 self.data_fetcher.save_ovh(ptv_name,oar_name,ovh_hist,self.queryStudyID)
                 self.data_fetcher.save_sts(ptv_name,oar_name,sts_hist,self.queryStudyID)
 

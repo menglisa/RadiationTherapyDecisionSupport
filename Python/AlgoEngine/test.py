@@ -6,8 +6,13 @@ from utils import *
 from DataFetcher import DataFetcher
 import pdb
 
-df = DataFetcher()
-ptv, oar = df.get_contours('1')
+from AlgoEngine import AlgoManager
+
+
+am = AlgoManager('1')
+
+am.feature_extraction()
+
 
 pdb.set_trace()
 
