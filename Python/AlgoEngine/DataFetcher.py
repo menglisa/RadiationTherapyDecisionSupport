@@ -1,18 +1,22 @@
 import MySQLdb
-import settings
 from sshtunnel import SSHTunnelForwarder
+<<<<<<< Updated upstream
 from AlgoEngine.utils import *
 import numpy as np
 import pdb
 from collections import defaultdict
 
+=======
+>>>>>>> Stashed changes
 
 # Imports for STS / OVH / etc
 import sys
 sys.path.append('..')
-from sts import getSTSHistogram
-from ovh import getOVH
-from similarity import getSTSEmd, getOVHEmd, getTDDistance
+from AlgoEngine.utils import *
+import AlgoEngine.settings
+from AlgoEngine.sts import getSTSHistogram
+from AlgoEngine.ovh import getOVH
+from AlgoEngine.similarity import getSTSEmd, getOVHEmd, getTDDistance
 
 import re
 

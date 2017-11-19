@@ -62,13 +62,15 @@ def getSTSEmd(query_sts, historical_sts):
 
 	Parameters
 	----------
+	
 	query_sts : 2D NdArray
-		An array of [pix, 4] dimensions, where `pix` is the number of pixels in the ROI, and the columns
-		are [elevation, distance, azimuth, percentage pixels] respectively for the query study.
+        Dimensions are [num_combinations, 4], where `num_combinations` is `(n_bins)^3` Contains
+        percentage of points in each interval, normalized but not cumulative for the query case.
 
-	historical_sts : 2D NdArray
-		An array of [pix, 4] dimensions, where `pix` is the number of pixels in the ROI, and the columns
-		are [elevation, distance, azimuth, percentage pixels] respectively for the historical study.
+    historical_sts : 2D NdArray
+        Dimensions are [num_combinations, 4], where `num_combinations` is `(n_bins)^3` Contains
+        percentage of points in each interval, normalized but not cumulative for the historical
+        case.
 
 	Returns
 	-------

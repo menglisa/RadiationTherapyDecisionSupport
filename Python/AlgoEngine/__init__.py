@@ -2,12 +2,27 @@
 import MySQLdb
 import numpy as np
 import collections
+<<<<<<< Updated upstream
 from sts import getSTSHistogram
 from ovh import getOVH
 from DataFetcher import DataFetcher
 from similarity import getOVHEmd,getSTSEmd
 import pdb
 from collections import defaultdict
+=======
+try:
+    from sts import getSTSHistogram
+    from ovh import getOVH
+    from DataFetcher import DataFetcher
+    from similarity_calculation import cal_dissimilarity_ovh,cal_dissimilarity_sts,cal_dissimilarity_td,cal_similarity
+except ImportError: # Used for running notebooks in `similarity` folder
+    import sys
+    sys.path.append('..')
+    from AlgoEngine.sts import getSTSHistogram
+    from AlgoEngine.ovh import getOVH
+    from AlgoEngine.DataFetcher import DataFetcher
+    from AlgoEngine.similarity_calculation import cal_dissimilarity_ovh,cal_dissimilarity_sts,cal_dissimilarity_td,cal_similarity
+>>>>>>> Stashed changes
 
 class AlgoManager():
     '''
