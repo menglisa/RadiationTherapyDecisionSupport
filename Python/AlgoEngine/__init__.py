@@ -5,8 +5,9 @@ import collections
 from sts import getSTSHistogram
 from ovh import getOVH
 from DataFetcher import DataFetcher
-from similarity_calculation import cal_dissimilarity_ovh,cal_dissimilarity_sts,cal_dissimilarity_td,cal_similarity
+from similarity import getOVHEmd,getSTSEmd
 import pdb
+from collections import defaultdict
 
 class AlgoManager():
     '''
@@ -40,7 +41,7 @@ class AlgoManager():
         for ptv_name,ptv_tuple in PTV.items():
             for oar_name,oar_tuple in OAR.items():
                 #in the tuple, the first one is contour block and the second one is roi block
-
+                print("process the pair")
                 oar_contour_block = oar_tuple[0]
                 oar_roi_block = oar_tuple[1]
 
@@ -49,14 +50,15 @@ class AlgoManager():
 
                 bin_vals, bin_amts = getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing,
                             row_spacing, column_spacing, slice_thickness, self.n_bins)
+
                 ovh_hist = (bin_vals, bin_amts)
 
+                print("Get ovh {}".format(ovh_hist))
                 elevation_bins, distance_bins, azimuth_bins, amounts = getSTSHistogram(ptv_roi_block, oar_roi_block, self.n_bins)
                 sts_hist = (elevation_bins, distance_bins, azimuth_bins, amounts)
 
+                print("Get Sts {}".format(sts_hist))
                 pdb.set_trace()
-
-
 
                 self.data_fetcher.save_ovh(ptv_name,oar_name,ovh_hist,self.queryStudyID)
                 self.data_fetcher.save_sts(ptv_name,oar_name,sts_hist,self.queryStudyID)
@@ -74,6 +76,15 @@ class AlgoManager():
             oar_name: (hist_query,hist_db)
         }
         '''
+        queryKeys = set(queryStudy.keys())
+        dbKeys = set(dbStudy.keys())
+        mergedKeys = queryKeys.intersection(dbKeys)
+        mergedDict = defaultdict()
+        for key in mergedKeys:
+            mergedDict[key] = (queryStudy[key],dbStudy[key])
+
+        return mergedDict
+
     def similarity_calculation(self):
         '''
         fetch ovh and STS features of other study
@@ -83,7 +94,6 @@ class AlgoManager():
         '''
         queryOVH = self.data_fetcher.get_ovh(self.queryStudyID)
         querySTS = self.data_fetcher.get_sts(self.queryStudyID)
-        queryTD = self.data_fetcher.get_target_dose(self.queryStudyID)
 
         for studyID in self.DBStudy_list:
             dbOVH = self.data_fetcher.get_ovh(studyID)
@@ -92,18 +102,13 @@ class AlgoManager():
             dbSTS = self.data_fetcher.get_sts(studyID)
             sts_pairs = self.generate_pairs(querySTS,dbSTS)
 
-            dbTD = self.data_fetcher.get_target_dose(studyID)
-            td_pair = (queryTD,dbTD)
+            ovh_dis = getOVHEmd(ovh_pairs)
 
-            ovh_dis = cal_dissimilarity_ovh(ovh_pairs)
+            sts_dis = getSTSEmd(sts_pairs)
 
-            sts_dis = cal_dissimilarity_sts(sts_pairs)
+            # sim = cal_similarity(ovh_dis,sts_dis,td_dis,weight)
 
-            td_dis = cal_dissimilarity_td(td_pair)
-
-            sim = cal_similarity(ovh_dis,sts_dis,td_dis,weight)
-
-            self.data_fetcher.save_similarity(self.queryStudyID,studyID,ovh_dis,sts_dis,td_dis,sim)
+            # self.data_fetcher.save_similarity(self.queryStudyID,studyID,ovh_dis,sts_dis,td_dis,sim)
 
 
     #The entrance of the programe

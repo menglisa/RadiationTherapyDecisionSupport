@@ -14,8 +14,6 @@ am = AlgoManager('1')
 am.feature_extraction()
 
 
-pdb.set_trace()
-
 """try:
     with DataFetcher() as df:
         # contour_block = df.get_contours(1)

@@ -160,9 +160,9 @@ def getCentroid(roi_block):
     
     positions = np.where(roi_block == 1)
     
-    x_center = round(np.average(positions[0])).astype(np.uint8)
-    y_center = round(np.average(positions[1])).astype(np.uint8)
-    z_center = round(np.average(positions[2])).astype(np.uint8)
+    x_center = np.round(np.average(positions[0])).astype(np.uint8)
+    y_center = np.round(np.average(positions[1])).astype(np.uint8)
+    z_center = np.round(np.average(positions[2])).astype(np.uint8)
 
     centroid = np.array([x_center, y_center, z_center]).astype(np.float32)
     

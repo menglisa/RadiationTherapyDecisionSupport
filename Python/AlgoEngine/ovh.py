@@ -1,6 +1,7 @@
 import numpy as np
 from math import sqrt
 from AlgoEngine.utils import getVolume, getContours
+import pdb
 
 def getNormalizedHistogram(bin_amts, volume):
 	"""
@@ -129,6 +130,7 @@ def getOVHDistances(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing
 	alpha = column_spacing / row_spacing
 	beta =  slice_spacing / row_spacing
 
+
 	for oar_voxel in range(0, num_oar_voxels_i):
 	    min_distance = 1000000
 	    for ptv_voxel in range(0, num_ptv_voxels):
@@ -199,8 +201,11 @@ def getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing,
 	"""
 	
 	oar_dists = getOVHDistances(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing, column_spacing, slice_spacing)
+	print("done with distance")
 	bin_vals, bin_amts = getHistogram(oar_dists, oar_roi_block, n_bins)
+	print("done with histogram")
 	volume = getVolume(oar_roi_block)
+	print("done with volume")
 	norm_bin_amts = getNormalizedHistogram(bin_amts, volume)
-	
+	print("donw with normalization")
 	return bin_vals, norm_bin_amts

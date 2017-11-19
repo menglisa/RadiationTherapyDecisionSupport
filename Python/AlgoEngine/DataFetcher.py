@@ -2,8 +2,9 @@ import MySQLdb
 import settings
 from sshtunnel import SSHTunnelForwarder
 from AlgoEngine.utils import *
+import numpy as np
 import pdb
-
+from collections import defaultdict
 
 
 # Imports for STS / OVH / etc
@@ -114,7 +115,6 @@ class DataFetcher():
         print("Starting contour")
         for roi in rois:
             roi_name = roi['ROIName']
-            print(roi_name)
             self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
             contour_dict = {}
             imagePatientOrientaion = {}
@@ -156,21 +156,40 @@ class DataFetcher():
         print("Done with all")
         return ptv_dict,oar_dict
 
-    def save_ovh(self,SourceOAR,TargetOAR,hist,StudyID):
+    def save_ovh(self,ptv_name,oar_name,ovh_hist,studyID):
         '''
         save ovh every time we have
         :param StudyID:
         :return:if the action is a success or not
         '''
+        query_insert_ovh = 'INSERT INTO ovh (binValue,binAmount,OverlapArea,ptv_id,OAR_id,fk_study_id_id) VALUES (%s,%s,%s,%s,%s,%s)'
+        query_oar_id = 'SELECT id from oar_dictionary WHERE ROIName = %s'
+        self.cursor.execute(query_oar_id, ptv_name)
+        ptv_id = self.cursor.fetchone()
+        self.cursor.execute(query_oar_id, oar_name)
+        oar_id = self.cursor.fetchone()
 
-    def save_sts(self,sts,StudyID):
+
+        self.cursor.execute(query_insert_ovh,ovh_hist[0],ovh_hist[1],20,ptv_id,oar_id,studyID)
+
+
+    def save_sts(self,ptv_name,oar_name,sts_hist,StudyID):
         '''
         definition is the same as save_ovh
         :param sts: has the same data structure like the one in save_ovh
         :param StudyID:
         :return:
         '''
-        pass
+        query_insert_sts = 'INSERT INTO sts (elevation_bins,distance_bins,azimuth_bins,amounts,ptv_id,OAR_id,study_id_id) VALUES (%s,%s,%s,%s,%s,%s,%s)'
+        query_oar_id = 'SELECT id from oar_dictionary WHERE ROIName = %s'
+
+        self.cursor.execute(query_oar_id, ptv_name)
+        ptv_id = self.cursor.fetchone()
+        self.cursor.execute(query_oar_id, oar_name)
+        oar_id = self.cursor.fetchone()
+
+        self.cursor.execute(query_insert_sts,sts_hist[0],sts_hist[1],sts_hist[2],sts_hist[3],ptv_id,oar_id,StudyID)
+
 
     #I don't know how to get this value, so we don't consider this right now
     def get_target_dose(self,studyID):
@@ -190,7 +209,19 @@ class DataFetcher():
         :param studyID:
         :return: a dictionary, the key is the name of TargetOAR, the value is the histogram
         '''
-        pass
+        query_for_ovh = 'SELECT * from ovh WHERE fk_study_id_id = %s'
+
+        self.cursor.execute(query_for_ovh,studyID)
+
+        data = self.cursor.fetchall()
+        #return it to be a dictionary, the key is the name of oar , the data is the histogram
+
+        ovhDict = defaultdict()
+
+        for row in data:
+            ovhDict[row['OAR_id']] = (row['binValue'],row['binAmount'])
+
+        return ovhDict
 
     def get_sts(self,studyID):
         '''
@@ -198,7 +229,18 @@ class DataFetcher():
         :param studyID:
         :return: a dictionary, the key is the name of TargetOAR, the value is the histogram
         '''
+        query_for_sts = 'SELECT * from sts WHERE fk_study_id_id = %s'
 
+        self.cursor.execute(query_for_sts,studyID)
+
+        data = self.cursor.fetchall()
+
+        stsDict = defaultdict()
+
+        for row in data:
+            stsDict[row['OAR_id']] = (row['elevation_bins'],row['distance_bins'],row['azimuth_bins'],row['amounts'])
+
+        return stsDict
 
     def save_similarity(self,SourceStudyID,TargetStudyID,ovh_dis,sts_dis,td_dis,sim):
         '''

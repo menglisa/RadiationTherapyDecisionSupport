@@ -1,12 +1,10 @@
 import numpy as np
 from skimage.draw import polygon
 import scipy.misc as misc
-import os
 import sys
 sys.path.append('..')
 import glob
 from collections import Counter,OrderedDict, defaultdict
-import AlgoEngine.settings as settings
 import cv2
 import dicom
 
