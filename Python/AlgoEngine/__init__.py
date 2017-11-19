@@ -60,8 +60,9 @@ class AlgoManager():
                 print("Get Sts {}".format(sts_hist))
                 pdb.set_trace()
 
+
                 self.data_fetcher.save_ovh(ptv_name,oar_name,ovh_hist,self.queryStudyID)
-                self.data_fetcher.save_sts(ptv_name,oar_name,sts_hist,self.queryStudyID)
+                # self.data_fetcher.save_sts(ptv_name,oar_name,sts_hist,self.queryStudyID)
 
 
         pass

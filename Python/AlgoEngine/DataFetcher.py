@@ -168,9 +168,10 @@ class DataFetcher():
         ptv_id = self.cursor.fetchone()
         self.cursor.execute(query_oar_id, oar_name)
         oar_id = self.cursor.fetchone()
+        binValue = ','.join(str(point) for point in ovh_hist[0])
+        binAmount = ','.join(str(point) for point in ovh_hist[1])
 
-
-        self.cursor.execute(query_insert_ovh,ovh_hist[0],ovh_hist[1],20,ptv_id,oar_id,studyID)
+        self.cursor.execute(query_insert_ovh,binValue,binAmount,20,ptv_id,oar_id,studyID)
 
 
     def save_sts(self,ptv_name,oar_name,sts_hist,StudyID):
