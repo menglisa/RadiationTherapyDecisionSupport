@@ -62,15 +62,14 @@ def getSTSEmd(query_sts, historical_sts):
 
 	Parameters
 	----------
-	
+
 	query_sts : 2D NdArray
-        Dimensions are [num_combinations, 4], where `num_combinations` is `(n_bins)^3` Contains
-        percentage of points in each interval, normalized but not cumulative for the query case.
+        Dimensions are [num_combinations, 4]. Contains
+        percentage of points in each interval, normalized but not cumulative, for the query case.
 
     historical_sts : 2D NdArray
-        Dimensions are [num_combinations, 4], where `num_combinations` is `(n_bins)^3` Contains
-        percentage of points in each interval, normalized but not cumulative for the historical
-        case.
+        Dimensions are [num_combinations, 4]. Contains
+        percentage of points in each interval, normalized but not cumulative, for the historical case.
 
 	Returns
 	-------
