@@ -1,13 +1,9 @@
 import MySQLdb
 from sshtunnel import SSHTunnelForwarder
-<<<<<<< Updated upstream
 from AlgoEngine.utils import *
 import numpy as np
 import pdb
 from collections import defaultdict
-
-=======
->>>>>>> Stashed changes
 
 # Imports for STS / OVH / etc
 import sys
@@ -29,11 +25,11 @@ query_for_contour = 'SELECT * from rt_contour WHERE fk_roi_id_id = %s AND fk_str
 query_for_image_plane_info = 'SELECT * from ct_images WHERE SOPInstanceUID = %s'
 class DataFetcher():
     def __init__(self):
-        #build connection
-        #save the connection with the class
+        """
+        Initializes datafetcher by building SSH connection, and saving the connection cursor.
 
-        #define some prepared statement to fetch data
-        #usin ssh tunnel
+        Then, funnctions to load data are prepared using the SSH tunnel.
+        """
         self.server = SSHTunnelForwarder((settings.ssh_hostname, settings.ssh_port), ssh_username=settings.ssh_username,
                                     ssh_password=settings.ssh_password,
                                         remote_bind_address=('127.0.0.1', 3306))
@@ -67,6 +63,28 @@ class DataFetcher():
         print("finish the exit process")
 
     def get_spacing(self, studyID):
+        """
+        Returns the row spacing and column spacing from the DICOM field `PixelSpacing`, and
+        returns the slice thickness from the DICOM filed `SliceThickness` from the SQL
+        database.
+
+        Parameters
+        ----------
+        StudyID : string
+            ID in the new dataset. Typically a single number, e.g. `'1'` or `'2'`.
+
+        Returns
+        -------
+        row_spacing : float
+            Row spacing for `StudyID`
+
+        column_spacing : float
+            Column spacing for `StudyID`
+
+        slice_thickness : float
+            Slice thickness for `StudyID`
+
+        """
         self.cursor.execute(query_for_roi_list,studyID)
         rois = self.cursor.fetchall()
         row_spacing = -1
@@ -105,11 +123,21 @@ class DataFetcher():
         image_position
         pixel_spacing
         :param studyID:
-        :return: a list of dictionaries, the first dictionary contains ptv and the second contains OAR
-        in the dictionary the key is the name of Roi, the value is the contour block
-        {
-            ROI:contourBlock
-        }
+
+        Parameters
+        ----------
+        StudyID : string
+            ID in the new dataset. Typically a single number, e.g. `'1'` or `'2'`.
+
+        Returns
+        --------
+        ptv_dict : List of Dict
+        a list of dictionaries, the first dictionary contains ptv and the second contains PTV
+            in the dictionary the key is the name of ROI, the value is the contour block.
+
+        oar_dict : list of Dict
+            a list of dictionaries, the first dictionary contains ptv and the second contains OAR
+            in the dictionary the key is the name of ROI, the value is the contour block.
         '''
         self.cursor.execute(query_for_roi_list,studyID)
         rois = self.cursor.fetchall()
@@ -255,8 +283,7 @@ class DataFetcher():
         :param StudyID:
         :return:
         '''
-        insert_similarity = 'INSERT INTO similarity(DBStudyID, Similarity,OVHDisimilarity,STSDisimilarity, TargetOAR, \
-                            fk_study_id_id VALUES (%s,%s,%s,%s,%s,%s))'
+        insert_similarity = 'INSERT INTO similarity(DBStudyID, Similarity,OVHDisimilarity,STSDisimilarity, TargetOAR, fk_study_id_id VALUES (%s,%s,%s,%s,%s,%s)'
         self.cursor.execute(insert_similarity,DBStudyID,Similarity,OVHDisimilarity,STSDisimilarity,TargetOAR,fk_study_id_id)
 
 
