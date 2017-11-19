@@ -242,14 +242,18 @@ class DataFetcher():
 
         return stsDict
 
-    def save_similarity(self,SourceStudyID,TargetStudyID,ovh_dis,sts_dis,td_dis,sim):
+    def save_similarity(self,DBStudyID,Similarity,OVHDisimilarity,STSDisimilarity,TargetOAR,fk_study_id_id):
+
         '''
         save a instance of sim
         :param similarity_paris:
         :param StudyID:
         :return:
         '''
-        pass
+        insert_similarity = 'INSERT INTO similarity(DBStudyID, Similarity,OVHDisimilarity,STSDisimilarity, TargetOAR, \
+                            fk_study_id_id VALUES (%s,%s,%s,%s,%s,%s))'
+        self.cursor.execute(insert_similarity,DBStudyID,Similarity,OVHDisimilarity,STSDisimilarity,TargetOAR,fk_study_id_id)
+
 
     def get_dbstudy_list(self,studyID):
         '''

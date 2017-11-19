@@ -102,13 +102,13 @@ class AlgoManager():
             dbSTS = self.data_fetcher.get_sts(studyID)
             sts_pairs = self.generate_pairs(querySTS,dbSTS)
 
-            ovh_dis = getOVHEmd(ovh_pairs)
-
-            sts_dis = getSTSEmd(sts_pairs)
-
-            # sim = cal_similarity(ovh_dis,sts_dis,td_dis,weight)
-
-            # self.data_fetcher.save_similarity(self.queryStudyID,studyID,ovh_dis,sts_dis,td_dis,sim)
+            keys = ovh_pairs.keys()
+            for key in keys:
+                ovh_item = ovh_pairs[key]
+                ovh_dis = getOVHEmd(ovh_item[0][0],ovh_item[0][1],ovh_item[1][0],ovh_item[1][1])
+                sts_item = sts_pairs[key]
+                sts_dis = getSTSEmd(sts_item)
+                self.data_fetcher.save_similarity(studyID,0,ovh_dis,sts_dis,key,self.queryStudyID)
 
 
     #The entrance of the programe
