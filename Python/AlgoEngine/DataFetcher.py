@@ -9,7 +9,7 @@ from collections import defaultdict
 import sys
 sys.path.append('..')
 from AlgoEngine.utils import *
-import AlgoEngine.settings
+import AlgoEngine.settings as settings
 from AlgoEngine.sts import getSTSHistogram
 from AlgoEngine.ovh import getOVH
 from AlgoEngine.similarity import getSTSEmd, getOVHEmd, getTDDistance
