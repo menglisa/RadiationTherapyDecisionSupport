@@ -10,7 +10,6 @@ from AlgoEngine import AlgoManager
 
 
 am = AlgoManager('1')
-print("loaded algomanager")
 
 am.feature_extraction()
 
