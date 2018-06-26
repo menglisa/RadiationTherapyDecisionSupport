@@ -63,6 +63,8 @@ The virtual machine contains a single user account ``radiation``. The
 password for the account is also ``radiation`` if needed (e.g. for running
 ``sudo`` command in terminal). 
 
+*Note* You may need to enable Virtualization for the virtual machine to work. In windows 10 [this link](https://answers.microsoft.com/en-us/windows/forum/windows_10-other_settings-winpc/cannot-find-the-option-to-enable-intel-vt-x-in/c9203f8a-da57-43be-8c75-cfe43d55cd70) should tell you how to set that up.
+
 In order to get this github repo on the VM, please run the following commands at the terminal:
 
 ```shell
