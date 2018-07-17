@@ -59,6 +59,14 @@ def getSTSHistogram(ptv_roi_block, oar_roi_block, n_bins):
     elevation_min = np.min(elevation)
     distance_max = np.max(distance) + epsilon
     distance_min = np.min(distance) 
+    
+    # TODO: as a failsafe, we remove `np.nan` values
+    # in this line of code- why can azimuth have NAN values?
+    nanlocations = np.isnan(azimuth)
+    azimuth = azimuth[~nanlocations]
+    elevation = elevation[~nanlocations]
+    distance = distance[~nanlocations]
+    
     azimuth_max = np.max(azimuth) + epsilon
     azimuth_min = np.min(azimuth) 
 

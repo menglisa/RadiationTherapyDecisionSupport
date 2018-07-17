@@ -218,6 +218,15 @@ class DataFetcher():
         '''
         query_insert_ovh = 'INSERT INTO ovh (binValue,binAmount,OverlapArea,ptv_id,OAR_id,fk_study_id_id) VALUES (%s,%s,%s,%s,%s,%s)'
         query_oar_id = 'SELECT id from oar_dictionary WHERE ROIName = %s'
+        
+        # used because pymysql expects list params, not strings 
+        # even for only one string
+        if type(ptv_name) is not list:
+            ptv_name = [ptv_name]
+            
+        if type(oar_name) is not list:
+            oar_name = [oar_name]
+        
         self.cursor.execute(query_oar_id, ptv_name)
         ptv_id = self.cursor.fetchone()
         self.cursor.execute(query_oar_id, oar_name)
