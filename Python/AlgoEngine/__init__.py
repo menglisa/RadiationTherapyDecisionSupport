@@ -61,8 +61,6 @@ class AlgoManager():
                 ptv_contour_block = ptv_tuple[0]
                 ptv_roi_block = ptv_tuple[1]
 
-                pdb.set_trace()
-
                 bin_vals, bin_amts = getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing,
                             row_spacing, column_spacing, slice_thickness, self.n_bins)
 

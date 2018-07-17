@@ -1,7 +1,5 @@
 # Radiation Therapy Decision Support
 
-(Readme by Veda Murthy)
-
 This readme is designed to highlight aspects of the development of 
 this project in Python.
 
@@ -33,6 +31,10 @@ DICOM files - v0.99
 Sort of an extension to Sphinx, allows us to write documentation in the code itself - version not specified
 * [Jupyter Notebook](jupyter.readthedocs.io/en/latest/install.html) - For showing results of python functions in
 html-like file.
+* [pymysql](https://pymysql.readthedocs.io/en/latest/) - To connect to the MySQL server that stores intermediate
+data for the program
+* [sshtunnel](https://sshtunnel.readthedocs.io/en/latest/) - For connecting to the remote server where the MySQL
+database is stored
 
 #### The Version of Python To Use
 
@@ -68,18 +70,18 @@ password for the account is also ``radiation`` if needed (e.g. for running
 In order to get this github repo on the VM, please run the following commands at the terminal:
 
 ```shell
-git clone https://github.com/SlevinZhang/RadiationTherapyDecisionSupport
+git clone https://github.com/vvmurthy/RadiationTherapyDecisionSupport
 cd RadiationTherapyDecisionSupport 
 git remote rename origin upstream
 git remote add origin https://github.com/<github_username>/RadiationTherapyDecisionSupport
 ```
 
-As an example, I would clone my repo using
+As an example, I would clone a repo for the GitHub account `SlevinZhang` using
 ```
-git clone https://github.com/SlevinZhang/RadiationTherapyDecisionSupport
+git clone https://github.com/vvmurthy/RadiationTherapyDecisionSupport
 cd RadiationTherapyDecisionSupport 
 git remote rename origin upstream
-git remote add origin https://github.com/vvmurthy/RadiationTherapyDecisionSupport
+git remote add origin https://github.com/SlevinZhang/RadiationTherapyDecisionSupport
 ```
 
 What these commands will do is allow you to update the shared repository
@@ -180,9 +182,6 @@ Because of this, it is generally a good idea to write / draft
 your functions in jupyter notebook to confirm they work as intended.
 Then you can copy them to a py file for use in program.
 
-See getContours.ipynb for an example- the inputs are loaded in the notebook, passed to the function defined in getContours.py, then
+See `getContours.ipynb` for an example- the inputs are loaded in the notebook, 
+passed to the function defined in `getContours.py`, then
 the results are displayed in the notebook again.
-
-## TODO
-
-See the Word Document "python_notes.docx" in the Dropbox Folder for functions that still need to be built.
