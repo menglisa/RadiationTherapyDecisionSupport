@@ -3,13 +3,13 @@ from sshtunnel import SSHTunnelForwarder
 from AlgoEngine.utils import *
 import numpy as np
 import pdb
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 # Imports for STS / OVH / etc
 import sys
 sys.path.append('..')
 from AlgoEngine.utils import *
-import AlgoEngine.settings
+import AlgoEngine.settings as settings
 from AlgoEngine.sts import getSTSHistogram
 from AlgoEngine.ovh import getOVH
 from AlgoEngine.similarity import getSTSEmd, getOVHEmd, getTDDistance
@@ -159,7 +159,6 @@ class DataFetcher():
                 contour_array = contour_array.reshape(contour_array.shape[0] // 3 , 3)
 
                 contour_dict[contour['ReferencedSOPInstanceUID']] = contour_array
-                #print(contour['ReferencedSOPInstanceUID'])
                 self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
                 image_info = self.cursor.fetchall()[0]
                 imagePatientOrientaion[contour['ReferencedSOPInstanceUID']] = np.array(image_info['ImageOrientationPatient'].split(','), dtype=np.float32)
@@ -182,11 +181,34 @@ class DataFetcher():
                 ptv_dict[roi_name] = (contour_block,roi_block)
             else:
                 oar_dict[roi_name] = (contour_block,roi_block)
-            
-            print("Finished contour")
 
         print("Done with all")
         return ptv_dict,oar_dict
+
+    def get_SOPIDs(self, StudyID):
+        """
+        Returns a dict of all the SOPIDs for a given StudyID.
+
+        Parameters
+        -----------
+        StudyID : String 
+            The StudyID to get SOPs for 
+
+        Returns
+        -------
+        SOPIDs : Ordered Dict
+            Ordered by z variable, key is Z var, value is SOP ID.
+
+
+        """
+        SOPIDs = OrderedDict()
+
+        # Fetch from SQL and process here
+        
+
+        SOPIDs = OrderedDict(sorted(SOPIDs.items(), key=lambda t : t[0], reverse=True)) # Needed to sort into correct position
+        return SOPIDs
+
 
     def save_ovh(self,ptv_name,oar_name,ovh_hist,studyID):
         '''
@@ -203,7 +225,7 @@ class DataFetcher():
         binValue = ','.join(str(point) for point in ovh_hist[0])
         binAmount = ','.join(str(point) for point in ovh_hist[1])
 
-        self.cursor.execute(query_insert_ovh,binValue,binAmount,20,ptv_id,oar_id,studyID)
+        self.cursor.execute(query_insert_ovh,[binValue],[binAmount],[20],[ptv_id,oar_id],[studyID])
 
 
     def save_sts(self,ptv_name,oar_name,sts_hist,StudyID):

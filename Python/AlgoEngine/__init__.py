@@ -4,7 +4,7 @@ import numpy as np
 import collections
 from sts import getSTSHistogram
 from ovh import getOVH
-from DataFetcher import DataFetcher
+from AlgoEngine.DataFetcher import DataFetcher
 from similarity import getOVHEmd,getSTSEmd
 import pdb
 from collections import defaultdict
@@ -19,7 +19,8 @@ except ImportError: # Used for running notebooks in `similarity` folder
     from AlgoEngine.sts import getSTSHistogram
     from AlgoEngine.ovh import getOVH
     from AlgoEngine.DataFetcher import DataFetcher
-    from AlgoEngine.similarity_calculation import cal_dissimilarity_ovh,cal_dissimilarity_sts,cal_dissimilarity_td,cal_similarity
+    import AlgoEngine.settings as settings
+    # from AlgoEngine.similarity_calculation import cal_dissimilarity_ovh,cal_dissimilarity_sts,cal_dissimilarity_td,cal_similarity
 
 class AlgoManager():
     '''
@@ -60,23 +61,26 @@ class AlgoManager():
                 ptv_contour_block = ptv_tuple[0]
                 ptv_roi_block = ptv_tuple[1]
 
+                pdb.set_trace()
+
                 bin_vals, bin_amts = getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing,
                             row_spacing, column_spacing, slice_thickness, self.n_bins)
 
                 ovh_hist = (bin_vals, bin_amts)
 
-                print("Get ovh {}".format(ovh_hist))
+                # print("Get ovh {}".format(ovh_hist))
+                print("OVH Done")
                 elevation_bins, distance_bins, azimuth_bins, amounts = getSTSHistogram(ptv_roi_block, oar_roi_block, self.n_bins)
                 sts_hist = (elevation_bins, distance_bins, azimuth_bins, amounts)
 
-                print("Get Sts {}".format(sts_hist))
-                pdb.set_trace()
+                print("STS Done")
+                # print("Get Sts {}".format(sts_hist))
 
 
                 self.data_fetcher.save_ovh(ptv_name,oar_name,ovh_hist,self.queryStudyID)
                 # self.data_fetcher.save_sts(ptv_name,oar_name,sts_hist,self.queryStudyID)
 
-
+                print("Saved OVH")
         pass
 
     def generate_pairs(self,queryStudy,dbStudy):
