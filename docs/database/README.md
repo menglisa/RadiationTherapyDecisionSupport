@@ -28,10 +28,10 @@ users assigned to, for example, `admin1` and `admin2`.
 
 Headers:
 
-**id** -> The unique id for the group. Used as a marker in other tables to signify a
+**id**, `int(11)` -> The unique id for the group. Used as a marker in other tables to signify a
         User's group.
 
-**name** -> The name of the group, e.g. `admins`, `doctors`, etc. Note that in a multi-hospital
+**name** `varchar(80)` -> The name of the group, e.g. `admins`, `doctors`, etc. Note that in a multi-hospital
         setting this would need to also differentiate between doctors from different hospitals
         and such, so you may have `UCLA doctors`, `TUM doctors` and so on.
 
@@ -42,11 +42,11 @@ group the ability to read UCLA patient's data, marked by permission id 12.
 
 Headers
 
-**id** -> unique ID for the permission
+**id** `int(11)`-> unique ID for the permission
 
-**group_id** -> The `auth_group` for whom the permission id should be granted
+**group_id** `int(11)`-> The `auth_group` for whom the permission id should be granted
 
-**permission_id** -> Specific permission by permission_id from `auth_permission`. 
+**permission_id** `int(11)` -> Specific permission by permission_id from `auth_permission`. 
 
 #### `auth_permission`
 This contains all the permission types available in RTDS. Examples include being able
@@ -55,52 +55,52 @@ to view patient information.
 
 Headers
 
-**id** -> Unique ID for the permission
+**id** `int(11)`-> Unique ID for the permission
 
-**name** -> Specific name of the permission. Follows naming `can [ACTION WORD] [VARIABLE TYPE]`,
+**name** `varchar(255)` -> Specific name of the permission. Follows naming `can [ACTION WORD] [VARIABLE TYPE]`,
         no uppercase
 
-**content_type_id** -> id of the `[VARIABLE TYPE]` from the name. For example, all permissions 
+**content_type_id** `int(11)` -> id of the `[VARIABLE TYPE]` from the name. For example, all permissions 
         relating to `log_entry` may have `content_type_id` 1.
 
-**codename** -> name without starting `can`
+**codename** `varchar(100)` -> name without starting `can`
 
 #### `auth_user`
 This contains all the registered users for RTDS, including admins, doctors and clinicians.
 
 Headers
 
-**id** -> User's unique ID
+**id** `int(11)`-> User's unique ID
 
-**password** -> SHA 256 hashed password of user
+**password** `varchar(128)` -> SHA 256 hashed password of user
 
-**last_login** -> last time user logged in
+**last_login** `datetime` -> last time user logged in
 
-**is_superuser** -> whether the user is an admin
+**is_superuser** `tinyint(1)` -> whether the user is an admin
 
-**username** -> user's username
+**username** `varchar(150)` -> user's username
 
-**first_name** -> user's first name
+**first_name** `varchar(30)` -> user's first name
 
-**last_name** -> user's last name
+**last_name** `varchar(30)` -> user's last name
 
-**email** -> user's email
+**email** `varchar(254)` -> user's email
 
-**is_staff** -> whether user is a (developer of RTDS?)
+**is_staff** `tinyint(1)` -> whether user is a (developer of RTDS?)
 
-**is_active** -> Whether the account has been deleted (unsure)
+**is_active** `tinyint(1)` -> Whether the account has been deleted (unsure)
 
-**date_joined** -> date of account creation
+**date_joined** `datetime` -> date of account creation
 
 #### `auth_user_groups`
 This links users by id to groups by id.
 
 Headers
-**id** -> id of linkage. Not really needed by anything.
+**id** `int(11)` -> id of linkage. Not really needed by anything.
 
-**user_id** -> id of user from `auth_user`. 
+**user_id** `int(11)` -> id of user from `auth_user`. 
 
-**group_id** -> id of group from `auth_group` which the user identified
+**group_id** `int(11)` -> id of group from `auth_group` which the user identified
     by `user_id` should belong to. 
 
 #### `auth_user_user_permissions`
@@ -109,11 +109,54 @@ the group.
 
 Headers
 
-**id** -> not really needed, id of linkage
+**id** `int(11)`-> not really needed, id of linkage
 
-**user_id** -> id of user from `auth_user`
+**user_id** `int(11)` -> id of user from `auth_user`
 
-**permission_id** -> id of permission from `auth_permission`
+**permission_id** `int(11)` -> id of permission from `auth_permission`
+
+#### `ct_images`
+This stores CT image data for a given patient
+
+Headers
+
+**id** `int(11)` -> id of a given CT image
+
+**SOPInstanceUID** `varchar(200)` -> DICOM id for the CT image
+
+**SOPClassUID** `varchar(100)` -> typically "CT IMAGE"
+
+**ImageType** `varchar(100)` -> typically "CT IMAGE"
+
+**PhotometricInterpretation** `varchar(20)` -> DICOM field from CT image file
+
+**RescaleSlope** `int(11)` -> DICOM field from CT image file
+
+**RescaleIntercept** `int(11)` -> DICOM field from CT image file
+
+**SliceLocation** `int(11)` -> DICOM field from CT image file
+
+**PixelSpacing** `varchar(50)` -> DICOM field from CT image file
+
+**ImageOrientationPatient** `varchar(100)` -> DICOM field from CT image file
+
+**ImagePositionPatient** `varchar(100)` -> DICOM field from CT image file
+
+**SliceThickness** `varchar(100)` -> DICOM field from CT image file
+
+**BodypartExamined** `varchar(100)` -> DICOM field from CT image file
+
+**Rows** `int(11)` -> DICOM field from CT image file. Number of rows of pixels in CT image.
+
+**Columns** `int(11)` -> DICOM field from CT image file. Number of columns of pixels in CT image.
+
+**fk_patient_id_id** `int(11)` -> Patient ID from database who CT image belongs to
+
+**fk_series_id_id** `int(11)` -> Series ID from database who CT image belongs to
+
+**fk_study_id_id** `int(11)` -> Study ID from database who CT image belongs to
+
+**fk_user_id_id** `int(11)` -> not needed
 
 #### `oar_dictionary`
 This links names of specific oars against a unique id. Note that
@@ -122,11 +165,11 @@ or a PTV.
 
 Headers
 
-**id** -> Unique database-assigned ID for the given ROI
+**id** `int(11)`-> Unique database-assigned ID for the given ROI
 
-**ROIName** -> Name of the ROI (full name)
+**ROIName** `varchar(100)`-> Name of the ROI (full name)
 
-**ROIDisplayColor** -> What color the contour should be for the ROI when flushed to the GUI. 
+**ROIDisplayColor** `varchar(100)`-> What color the contour should be for the ROI when flushed to the GUI. 
                     Should be a tuple of RGB values. In the event users can change the 
                     color of the ROI in the GUI, this would be the default colors. 
 
@@ -135,38 +178,38 @@ This stores extracted OVH information for a given PTV-OAR pair for a given patie
 
 Headers
 
-**id** -> not really needed, unique id assigned to OVH
+**id** `int(11)` -> not really needed, unique id assigned to OVH
 
-**binValue** -> supposed to be binValues(?) - values for each bin OVH histogram
+**binValue** `longtext` -> supposed to be binValues(?) - values for each bin OVH histogram
 
-**binAmount** -> amount of pixels in each bin
+**binAmount** `longtext` -> amount of pixels in each bin
 
-**OverlapArea** -> unsure
+**OverlapArea** `int(11)` -> unsure
 
-**ptv_id** -> id of ptv from `oar_dictionary`
+**ptv_id** `int(11)` -> id of ptv from `oar_dictionary`
 
-**OAR_id** -> id of oar from `oar_dictionary`
+**OAR_id** `int(11)` -> id of oar from `oar_dictionary`
 
-**fk_study_id_id** -> DICOM study id for which the OVH was extracted from 
+**fk_study_id_id** `int(11)` -> DICOM study id for which the OVH was extracted from 
 
 #### `patients`
 This is basic patient metadata.
 
 Headers
 
-**id** -> database-assigned id for the patient. If two patients from different
+**id** `int(11)` -> database-assigned id for the patient. If two patients from different
         hospitals have the same `fk_user_id_id`, this should be used
         as the deciding factor as to which patient information belongs to. 
 
-**PatientName** -> name of patient (full)
+**PatientName** `varchar(200)` -> name of patient (full)
 
-**BirthDate** -> Patient date of birth, `null` if not known
+**BirthDate** `date` -> Patient date of birth, `null` if not known
 
-**Gender** -> Single character: `M` for Male, `F` for female, `O` for other
+**Gender** `varchar(20)` -> Single character: `M` for Male, `F` for female, `O` for other
 
-**EnthicGroup** -> Ethnic Group of patient, e.g. `White`, `Asian` etc
+**EnthicGroup** `varchar(200)` -> Ethnic Group of patient, e.g. `White`, `Asian` etc
 
-**fk_user_id_id** -> user id by hospital. Probably used as a unique patient
+**fk_user_id_id** `int(11)` -> user id by hospital. Probably used as a unique patient
                 identifier. Id is typically extracted from DICOM files
                 for a patient.
 
@@ -176,133 +219,133 @@ for a given patient.
 
 Headers
 
-**id** -> not needed, database assigned id for contour
+**id** `int(11)` -> not needed, database assigned id for contour
 
-**ContourGeometricType** -> from the DICOM object, typically "CLOSED PLANAR"
+**ContourGeometricType** `varchar(100)` -> from the DICOM object, typically "CLOSED PLANAR"
 
-**NumberOfContourPoints** -> Number of points in the contour data. Used
+**NumberOfContourPoints** `int(11)` -> Number of points in the contour data. Used
                         to preallocate array to store contour data.
 
-**ContourData** -> x y z points for a contour. All z coordinates should be 
+**ContourData** `longtext` -> x y z points for a contour. All z coordinates should be 
                 the same in a given contour as it will correspond with a 
                 given slice
 
-**ReferencedSOPClassUID** -> "CT Image Storage"
+**ReferencedSOPClassUID** `varchar(100)` -> "CT Image Storage"
 
-**ReferencedSOPInstanceUID** -> the CT image which the contour data is to be
+**ReferencedSOPInstanceUID** `varchar(100)` -> the CT image which the contour data is to be
                             overlaid on 
 
-fk_roi_id_id -> id of ROI which the contour belongs to, database id
+**fk_roi_id_id** `int(11)` -> id of ROI which the contour belongs to, database id
 
-fk_structureset_id_id -> ID of RT Struct which the contour belongs to, database id
+**fk_structureset_id_id** `int(11)` -> ID of RT Struct which the contour belongs to, database id
 
 #### `rt_dose`
 Stores dose data from an RT dose object
 
 Headers
 
-**id** -> database ID for the dose information
+**id** `int(11)` -> database ID for the dose information
 
-**SOPClassUID** -> typically the same for all RT dose objects
+**SOPClassUID** `varchar(100)` -> typically the same for all RT dose objects
 
-**SOPInstanceUID** -> DICOM assigned ID for dose object
+**SOPInstanceUID** `varchar(100)` -> DICOM assigned ID for dose object
 
-**DoseGridScaling** -> Directly extracted from the dose object, needed for calculations
+**DoseGridScaling** `varchar(100)` -> Directly extracted from the dose object, needed for calculations
                     relating to the dose.
 
-**DoseSummationType** -> Directly extracted from the dose object, needed for calculations
+**DoseSummationType** `varchar(100)` -> Directly extracted from the dose object, needed for calculations
                     relating to the dose.
 
-**DoseType** -> Directly extracted from the dose object, needed for calculations
+**DoseType** `varchar(100)` -> Directly extracted from the dose object, needed for calculations
                     relating to the dose.
 
-**DoseUnits** -> Directly extracted from the dose object, needed for calculations
+**DoseUnits** `varchar(100)` -> Directly extracted from the dose object, needed for calculations
                     relating to the dose.  
 
-**eferencedRTPlanSequence** -> Directly extracted from the dose object, needed for calculations
+**eferencedRTPlanSequence** `varchar(100)` -> Directly extracted from the dose object, needed for calculations
                     relating to the dose.
 
-**ReferencedStructureSetSequence** -> Directly extracted from the dose object, needed for calculations
+**ReferencedStructureSetSequence** `varchar(100)` -> Directly extracted from the dose object, needed for calculations
                     relating to the dose.
 
-**fk_patient_id_id** -> database ID for patient who the RT dose object belongs to
+**fk_patient_id_id** `int(11)` -> database ID for patient who the RT dose object belongs to
 
-**fk_series_id_id** -> database ID for series which the RT dose object belongs to
+**fk_series_id_id** `int(11)` -> database ID for series which the RT dose object belongs to
 
-**fk_study_id_id** -> database ID for study which the RT dose object belongs to
+**fk_study_id_id** `int(11)` -> database ID for study which the RT dose object belongs to
 
-**fk_user_id_id** -> not needed
-
-#### `rt_dvh` 
-
-Stores the Dose Volume Histogram (DVH) for an RT dose object
-
-**id** -> unique ID assigned to rt dose object by db, not needed
-
-**DVHDoseScaling** -> unsure
-
-**DVHMaximumDose** -> unsure
-
-**DVHMeanDose** -> unsure
-
-**DVHMinimumDose** -> unsure
-
-**DVHNumberOfBins** -> unsure
-
-**DVHReferencedROI** -> the ROI which a DVH is describing by db id
-
-**DVHType** -> unsure
-
-**DVHVolumeUnits** -> unsure
-
-**DoseType** -> Unsure
-
-**DoseUnits** -> unsure
-
-**DVHData** -> unsure
-
-**fk_dose_id_id** -> database id of the rt dose object which the dvh is describing
-
-**fk_patient_id_id** -> database id of the patient which the dvh belongs to
-
-**fk_series_id_id** -> database id of the series which the dvh belongs to
-
-**fk_study_id** -> database id of the study which the dvh belongs to
-
-**fk_user_id_id** -> not needed
+**fk_user_id_id** `int(11)` -> not needed
 
 #### `rt_dose_image`
 Stores dose image data from an RT Dose object
 
 Headers
 
-**id** not needed, db unique id for rt dose image
+**id** `int(11)` not needed, db unique id for rt dose image
 
-**columns** of image
+**columns** `int(11)` of image
 
-**rows** of image
+**rows** `int(11)` of image
 
-**ImageOrientationPatient** Raw header extracted from DICOM file
+**ImageOrientationPatient** `varchar(20)` Raw header extracted from DICOM file
 
-**ImagePositionPatient** Raw header extracted from DICOM file
+**ImagePositionPatient** `varchar(20)` Raw header extracted from DICOM file
 
-**PhotometricInterpretation** Raw header extracted from DICOM file
+**PhotometricInterpretation** `varchar(20)` Raw header extracted from DICOM file
 
-**PixelSpacing** Raw header extracted from DICOM file
+**PixelSpacing** `varchar(20)` Raw header extracted from DICOM file
 
-**NumberOfFrames** Raw header extracted from DICOM file
+**NumberOfFrames** `int(11)` Raw header extracted from DICOM file
 
-**ImageData** Raw header extracted from DICOM file
+**ImageData** `longtext` Raw header extracted from DICOM file
 
-**fk_dose_id_id** db id of rt dose object
+**fk_dose_id_id** `int(11)` db id of rt dose object
 
-**fk_patient_id_id** patient id who rt dose image belongs to
+**fk_patient_id_id** `int(11)` patient id who rt dose image belongs to
 
-**fk_series_id_id** series which rt dose belongs to
+**fk_series_id_id** `int(11)` series which rt dose belongs to
 
-**fk_study_id_id** study which rt dose belongs to
+**fk_study_id_id** `int(11)` study which rt dose belongs to
 
-**fk_user_id_id** not needed
+**fk_user_id_id** `int(11)` not needed
+
+#### `rt_dvh` 
+
+Stores the Dose Volume Histogram (DVH) for an RT dose object
+
+**id** `int(11)` -> unique ID assigned to rt dose object by db, not needed
+
+**DVHDoseScaling** `varchar(20)` -> unsure
+
+**DVHMaximumDose** `double` -> unsure
+
+**DVHMeanDose** `double` -> unsure
+
+**DVHMinimumDose** `double` -> unsure
+
+**DVHNumberOfBins** `double` -> unsure
+
+**DVHReferencedROI** `varchar(10)` -> the ROI which a DVH is describing by db id
+
+**DVHType** -> `varchar(10)` unsure
+
+**DVHVolumeUnits** `varchar(10)` -> unsure
+
+**DoseType** `varchar(10)` -> Unsure
+
+**DoseUnits** `varchar(10)` -> unsure
+
+**DVHData** `longtext` -> unsure
+
+**fk_dose_id_id** `int(11)` -> database id of the rt dose object which the dvh is describing
+
+**fk_patient_id_id** `int(11)`-> database id of the patient which the dvh belongs to
+
+**fk_series_id_id** `int(11)`-> database id of the series which the dvh belongs to
+
+**fk_study_id** `int(11)`-> database id of the study which the dvh belongs to
+
+**fk_user_id_id** `int(11)`-> not needed
 
 #### `rt_isdose`
 RT Isodose data stored after processing by the program. Stores each value
@@ -310,70 +353,70 @@ by pixel.
 
 Headers
 
-**id** -> not needed, unique db assigned id for the RT isodose data
+**id** `int(11)`-> not needed, unique db assigned id for the RT isodose data
 
-**RowPosition** -> row position wrt CT image rows and columns where isodose pixel is
+**RowPosition** `longtext` -> row position wrt CT image rows and columns where isodose pixel is
 
-**ColumnPosition** -> column position wrt CT image rows and columns where isodose pixel is   
+**ColumnPosition** `longtext` -> column position wrt CT image rows and columns where isodose pixel is   
 
-**IsDoseValue** -> value of isodose at pixel position
+**IsDoseValue** `int(11)` -> value of isodose at pixel position
 
-**fk_ct_image_id_id** -> ct image which isodose is to be overlaid on
+**fk_ct_image_id_id** `int(11)`-> ct image which isodose is to be overlaid on
 
-**fk_dose_id_id** -> dose object database id isodose data was extracted from
+**fk_dose_id_id** `int(11)`-> dose object database id isodose data was extracted from
 
-**fk_patient_id_id** -> patient database id which rt isodose data belongs to
+**fk_patient_id_id** `int(11)`-> patient database id which rt isodose data belongs to
 
-**fk_series_id_id** -> series database id for isodose data
+**fk_series_id_id** `int(11)`-> series database id for isodose data
 
-**fk_study_id_id** -> study databae id for isodose data
+**fk_study_id_id** `int(11)`-> study databae id for isodose data
                
 #### `rt_rois`
 Stores the ROIs for a given RT Struct object
 
 Headers
 
-**id** -> not needed, ID assigned to an ROI from a given RT Struct object
+**id** `int(11)` -> not needed, ID assigned to an ROI from a given RT Struct object
 
-**ROIName** -> Name of the ROI 
+**ROIName** `varchar(100)` -> Name of the ROI 
 
-**Volume** -> volume of ROI (in what measurement?)
+**Volume** `double` -> volume of ROI (in what measurement?)
 
-**TotalContours** -> How many 2D contours have been drawn for the ROI
+**TotalContours** `int(11)`-> How many 2D contours have been drawn for the ROI
 
-**fk_structureset_id_id** -> RT Struct which the roi belongs to, database id
+**fk_structureset_id_id** `int(11)` -> RT Struct which the roi belongs to, database id
 
-**fk_patient_id_id** -> patient to which the ROI belongs to
+**fk_patient_id_id** `int(11)`-> patient to which the ROI belongs to
 
-**fk_series_id_id** -> series to which the ROI belongs to
+**fk_series_id_id** `int(11)`-> series to which the ROI belongs to
 
-**fk_study_id_id** -> study to which the ROI belongs to
+**fk_study_id_id**`int(11)` -> study to which the ROI belongs to
 
-**fk_user_id_id** -> not needed
+**fk_user_id_id** `int(11)`-> not needed
 
-**ROINumber** -> directly extracted raw from the DICOM file. 
+**ROINumber** `varchar(200)` -> directly extracted raw from the DICOM file. 
 
 #### `rt_structureset`
 This stores information on the ROIs in an RT STRUCT object
 
 Headers
 
-**id** -> unique id assigned by db for RT STRUCT
+**id** `int(11)`-> unique id assigned by db for RT STRUCT
 
-**SOPInstanceUID** -> DICOM UID for the RT structure object
+**SOPInstanceUID** `varchar(200)` -> DICOM UID for the RT structure object
 
-**SOPClassUID** -> Defaults to "RT Structure Set Storage". Acts as a failsafe
+**SOPClassUID** `varchar(200)` -> Defaults to "RT Structure Set Storage". Acts as a failsafe
                 in making sure correct files are uploaded to the correct DB table.
 
-**TotalROIs** -> Number of ROIs in RT Struct object
+**TotalROIs** `int(11)`-> Number of ROIs in RT Struct object
 
-**fk_patient_id_id** -> DICOM id for the patient which the RT Struct belongs to
+**fk_patient_id_id** `int(11)`-> DICOM id for the patient which the RT Struct belongs to
 
-**fk_series_id_id** -> DICOM id for the series which the RT Struct belongs to
+**fk_series_id_id**`int(11)` -> DICOM id for the series which the RT Struct belongs to
 
-**fk_study_id_id** -> DICOM id for the study which the RT Struct belongs to
+**fk_study_id_id** `int(11)`-> DICOM id for the study which the RT Struct belongs to
 
-**fk_user_id_id** -> not needed
+**fk_user_id_id**`int(11)` -> not needed
 
 #### `series`
 Stores the DICOM series ID for a given series of images. Types of series
@@ -381,32 +424,32 @@ include CT image series and RT structure series. Typically one study
 will have multiple series in it. 
 
 Headers
-**id** -> database assigned id for the series
+**id** `int(11)`-> database assigned id for the series
 
-**SeriesInstanceUID** -> raw UID from the DICOM files for the series. All DICOM
+**SeriesInstanceUID** `varchar(200)` -> raw UID from the DICOM files for the series. All DICOM
                     files of the same series have the same SeriesInstanceUID
 
-**SeriesDate** -> Date series was acquired. 
+**SeriesDate** `date` -> Date series was acquired. 
 
-**SeriesDescription** -> Type of Series + manufacturer. For example, one might be
+**SeriesDescription** `varchar(200)` -> Type of Series + manufacturer. For example, one might be
                     "Oncentra Structure Set"
 
-**SeriesType** -> Either "CT" or "RTSTRUCT" typically
+**SeriesType** `varchar(100)` -> Either "CT" or "RTSTRUCT" typically
 
-**Modality** -> raw field from DICOM file- either "CT" or "RTSTRUCT"
+**Modality** `varchar(100)` -> raw field from DICOM file- either "CT" or "RTSTRUCT"
 
-**SeriesNumber** -> raw field from DICOM file
+**SeriesNumber** `varchar(100)` -> raw field from DICOM file
 
-**PhysicianOfRecord** -> Physician who was involved in acquiring DICOM series. From DICOM
+**PhysicianOfRecord** `varchar(100)` -> Physician who was involved in acquiring DICOM series. From DICOM
                     files themselves.
 
-**Manufacturer** -> who manufactured the device the DICOM series was acquired on. 
+**Manufacturer** `varchar(50)` -> who manufactured the device the DICOM series was acquired on. 
 
-**fk_patient_id_id** -> DICOM id for the patient who the series belongs to
+**fk_patient_id_id** `int(11)` -> DICOM id for the patient who the series belongs to
 
-**fk_study_id_id** -> DICOM id for the study which the series belongs to
+**fk_study_id_id**`int(11)` -> DICOM id for the study which the series belongs to
 
-**fk_user_id_id** -> not needed?
+**fk_user_id_id**`int(11)` -> not needed?
 
 #### `similarity`
 This is used to store similarity values for the OVH, STS and target dose for 
@@ -415,85 +458,85 @@ stored here.
 
 Headers
 
-**id**-> not really needed, ID of similarity pair
+**id**-> `int(11)` not really needed, ID of similarity pair
 
-**DBStudyID** -> The "Historical" patient in the pair. Typically at the time
+**DBStudyID** `varchar(100)` -> The "Historical" patient in the pair. Typically at the time
     of this calculation, one of the patients is newly-uploaded, who is
     considered the current patient. The other patient in the pair is considered
     the historical patient. This is the study ID of the historical patient,
     from `studies`
 
-**Similarity** -> Target Dose similarity (unsure)
+**Similarity** `double` -> Target Dose similarity (unsure)
 
-**OVHDissimilarity** -> Similarity between two Overlap Volume Histograms for the two patients
+**OVHDissimilarity** `double` -> Similarity between two Overlap Volume Histograms for the two patients
 
-**STSDissimilarity** -> Similarity between two Spatial Target Signature histograms
+**STSDissimilarity** `double` -> Similarity between two Spatial Target Signature histograms
 
-**TargetOAR** -> the OAR the OVH / STS are between, identified by id in `oar_dictionary`
+**TargetOAR** `varchar(200)` -> the OAR the OVH / STS are between, identified by id in `oar_dictionary`
 
-**fk_study_id_id** -> the study ID of the current patient
+**fk_study_id_id** `int(11)` -> the study ID of the current patient
 
 #### `sts`
 Stores values for the Spatial Target Signature Histogram for a specified patient.
 
 Headers
 
-**id** -> not really needed, unique id of STS histogram for a patient and given PTV-OAR pair in DB
+**id** `int(11)` -> not really needed, unique id of STS histogram for a patient and given PTV-OAR pair in DB
 
-**elevation_bins** -> amounts for the elevation bins in the STS histogram
+**elevation_bins** `longtext` -> amounts for the elevation bins in the STS histogram
 
-**distance_bins** -> amounts for the distance bins in the STS histogram
+**distance_bins** `longtext` -> amounts for the distance bins in the STS histogram
 
-**azimuth_bins** -> amounts for the azimuth bins in the STS histogram
+**azimuth_bins** `longtext` -> amounts for the azimuth bins in the STS histogram
 
-**amounts** -> flattened array (unsure) storing the values for each (elevation, distance, azimuth)
+**amounts** `longtext` -> flattened array (unsure) storing the values for each (elevation, distance, azimuth)
             tuple. 
 
-**ptv_id** -> id of primary target volume from `oar_dictionary`
+**ptv_id** `int(11)`-> id of primary target volume from `oar_dictionary`
 
-**OAR_id** -> id of organ at risk from `oar_dictionary`
+**OAR_id** `int(11)`-> id of organ at risk from `oar_dictionary`
 
-**fk_study_id_id** -> id of study (DICOM) from `studies` for which the STS histogram belongs to. 
+**fk_study_id_id** `int(11)`-> id of study (DICOM) from `studies` for which the STS histogram belongs to. 
 
 #### `studies`
 This stores which study belongs to which patient. 
 
 Headers
 
-**id** -> database assigned id for the study
+**id** `int(11)`-> database assigned id for the study
 
-**StudyInstanceUID** -> from a DICOM file, what the study UID is
+**StudyInstanceUID** `varchar(200)` -> from a DICOM file, what the study UID is
 
-**StudyDate** -> Extracted from DICOM file with specified StudyInstanceUID
+**StudyDate** `date` -> Extracted from DICOM file with specified StudyInstanceUID
 
-**StudyDescription** -> What the study scanned for 
+**StudyDescription** `varchar(200)` -> What the study scanned for 
 
-**TotalSeries** -> unsure
+**TotalSeries** `int(11)`-> unsure
 
-**fk_patient_id_id** -> DICOM patient ID for whom the study belongs to. 
+**fk_patient_id_id** `int(11)`-> DICOM patient ID for whom the study belongs to. 
 
-**fk_user_id_id** -> unsure. This should probably not exist
+**fk_user_id_id** `int(11)`-> unsure. This should probably not exist
 
 #### `userprofile_userprofile`
 This is general user information on each person.
 
 Headers
 
-**id** -> not really needed, id of metadata
+**id** `int(11)`-> not really needed, id of metadata
 
-**occupation** -> occupation of user by id
+**occupation** `varchar(30)` -> occupation of user by id
 
-**institution** -> place where the user works
+**institution** `varchar(30)` -> place where the user works
 
-**birthday** -> user date of birth
+**birthday** `date` -> user date of birth
 
-**location** -> location where the user works
+**location** `varchar(30)` -> location where the user works
 
-**bio** -> biographical statement on the user. For example,
+**bio** `longtext` -> biographical statement on the user. For example,
         one might write. "Dr. something, formerly worked at UCLA,
         now works at Roswell Park as a Radiation Oncologist"
 
-**user_id** -> id for which the profile information belongs, user id from
+**user_id** `int(11)`-> id for which the profile information belongs, user id from
             `auth_user`.
 
 
@@ -540,3 +583,9 @@ from admin login)
 * Determine how unit testing should be performed for calls against the SQL database- it should construct
     a mock / dummy sql database for writing to?
 * Create python script to generate a database in the correct format
+* Ensure `RescaleSlope`, `RescaleIntercept`, and `SliceLocation` in `ct_images` can only be integers
+* Should `ROIDisplayColor` be `varchar(100)`? We can set a tighter lower bound of about 13 characters:
+"(xxx,yyy,zzz)"
+* Why is `PatientGender` in `patients` `varchar(20)`? it should be `varchar(1)`
+* Why is `DBStudyID` in `similarity` `varchar`? it should be `int(11)`
+* Why is `TargetOAR` in `similarity` `varchar`? it should be `int(11)`
