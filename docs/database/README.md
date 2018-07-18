@@ -90,6 +90,30 @@ id -> not really needed, id of linkage
 user_id -> id of user from `auth_user`
 permission_id -> id of permission from `auth_permission`
 
+#### `oar_dictionary`
+This links names of specific oars against a unique id. Note that
+OAR in this context refers to an ROI - it can be either an OAR
+or a PTV. 
+
+Headers
+id -> Unique database-assigned ID for the given ROI
+ROIName -> Name of the ROI (full name)
+ROIDisplayColor -> What color the contour should be for the ROI when flushed to the GUI. 
+                    Should be a tuple of RGB values. In the event users can change the 
+                    color of the ROI in the GUI, this would be the default colors. 
+
+#### `ovh`
+This stores extracted OVH information for a given PTV-OAR pair for a given patient's study.
+
+Headers
+id -> not really needed, unique id assigned to OVH
+binValue -> supposed to be binValues(?) - values for each bin OVH histogram
+binAmount -> amount of pixels in each bin
+OverlapArea -> unsure
+ptv_id -> id of ptv from `oar_dictionary`
+OAR_id -> id of oar from `oar_dictionary`
+fk_study_id_id -> DICOM study id for which the OVH was extracted from 
+
 #### `patients`
 This is basic patient metadata.
 
@@ -104,6 +128,76 @@ EnthicGroup -> Ethnic Group of patient, e.g. `White`, `Asian` etc
 fk_user_id_id -> user id by hospital. Probably used as a unique patient
                 identifier. Id is typically extracted from DICOM files
                 for a patient.
+
+#### `rt_contour`
+Stores the contour data to be overlaid over a given slice of a CT object
+for a given patient.
+
+Headers
+id -> not needed, database assigned id for contour
+ContourGeometricType -> from the DICOM object, typically "CLOSED PLANAR"
+NumberOfContourPoints -> Number of points in the contour data. Used
+                        to preallocate array to store contour data.
+ContourData -> x y z points for a contour. All z coordinates should be 
+                the same in a given contour as it will correspond with a 
+                given slice
+ReferencedSOPClassUID -> "CT Image Storage"
+ReferencedSOPInstanceUID -> the CT image which the contour data is to be
+                            overlaid on 
+fk_roi_id_id -> id of ROI which the contour belongs to, database id
+fk_structureset_id_id -> ID of RT Struct which the contour belongs to, database id
+
+
+#### `rt_rois`
+Stores the ROIs for a given RT Struct object
+
+Headers
+id -> not needed, ID assigned to an ROI from a given RT Struct object
+ROIName -> Name of the ROI 
+Volume -> volume of ROI (in what measurement?)
+TotalContours -> How many 2D contours have been drawn for the ROI
+fk_structureset_id_id -> RT Struct which the roi belongs to, database id
+fk_patient_id_id -> patient to which the ROI belongs to
+fk_series_id_id -> series to which the ROI belongs to
+fk_study_id_id -> study to which the ROI belongs to
+fk_user_id_id -> not needed
+ROINumber -> directly extracted raw from the DICOM file. 
+
+#### `rt_structureset`
+This stores information on the ROIs in an RT STRUCT object
+
+Headers
+id -> unique id assigned by db for RT STRUCT
+SOPInstanceUID -> DICOM UID for the RT structure object
+SOPClassUID -> Defaults to "RT Structure Set Storage". Acts as a failsafe
+                in making sure correct files are uploaded to the correct DB table.
+TotalROIs -> Number of ROIs in RT Struct object
+fk_patient_id_id -> DICOM id for the patient which the RT Struct belongs to
+fk_series_id_id -> DICOM id for the series which the RT Struct belongs to
+fk_study_id_id -> DICOM id for the study which the RT Struct belongs to
+fk_user_id_id -> not needed
+
+#### `series`
+Stores the DICOM series ID for a given series of images. Types of series
+include CT image series and RT structure series. Typically one study
+will have multiple series in it. 
+
+Headers
+id -> database assigned id for the series
+SeriesInstanceUID -> raw UID from the DICOM files for the series. All DICOM
+                    files of the same series have the same SeriesInstanceUID
+SeriesDate -> Date series was acquired. 
+SeriesDescription -> Type of Series + manufacturer. For example, one might be
+                    "Oncentra Structure Set"
+SeriesType -> Either "CT" or "RTSTRUCT" typically
+Modality -> raw field from DICOM file- either "CT" or "RTSTRUCT"
+SeriesNumber -> raw field from DICOM file
+PhysicianOfRecord -> Physician who was involved in acquiring DICOM series. From DICOM
+                    files themselves.
+Manufacturer -> who manufactured the device the DICOM series was acquired on. 
+fk_patient_id_id -> DICOM id for the patient who the series belongs to
+fk_study_id_id -> DICOM id for the study which the series belongs to
+fk_user_id_id -> not needed?
 
 #### `similarity`
 This is used to store similarity values for the OVH, STS and target dose for 
@@ -124,8 +218,18 @@ TargetOAR -> the OAR the OVH / STS are between, identified by id in `oar_diction
 fk_study_id_id -> the study ID of the current patient
 
 #### `sts`
+Stores values for the Spatial Target Signature Histogram for a specified patient.
 
-
+Headers
+id -> not really needed, unique id of STS histogram for a patient and given PTV-OAR pair in DB
+elevation_bins -> amounts for the elevation bins in the STS histogram
+distance_bins -> amounts for the distance bins in the STS histogram
+azimuth_bins -> amounts for the azimuth bins in the STS histogram
+amounts -> flattened array (unsure) storing the values for each (elevation, distance, azimuth)
+            tuple. 
+ptv_id -> id of primary target volume from `oar_dictionary`
+OAR_id -> id of organ at risk from `oar_dictionary`
+fk_study_id_id -> id of study (DICOM) from `studies` for which the STS histogram belongs to. 
 
 #### `studies`
 This stores which study belongs to which patient. 
@@ -180,3 +284,14 @@ from admin login)
 * should we link studies in `studies` by database or DICOM patient ID? database patient
     ID seems less prone to errors. 
 * Purpose of `fk_user_id_id` in `studies` table?
+* How are `amounts` in the `sts` table going to be stored? For a large histogram, we risk
+    having to store at low precision to stay within data limits of the table. 
+* Create parser to dump all UCLA patient data into the database. `patients`, `series`, all the
+    tables the start with `rt`, `ct_images` and `studies` will need to be updated with raw
+    data. `similarity` and `sts` and `ovh` will need to be updated with calculation
+* Rerunning a calculation for `sts`, `ovh` or `similarity` should overwrite the calculation
+    in the database. 
+* Patient Dashboard GUI for both all types of users to view the patients they have been assigned
+* A user should automatically be given rights to patients whose DICOM files they upload
+* Add `ROI_ID` field to `rt_rois` table
+* Dashboard for the Contour data for a given patient, DVH data and Isodose contours for a given patient
