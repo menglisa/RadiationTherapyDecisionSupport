@@ -27,9 +27,11 @@ For example, one row of the `auth_group` table might be `admins`, which we may h
 users assigned to, for example, `admin1` and `admin2`. 
 
 Headers:
-id -> The unique id for the group. Used as a marker in other tables to signify a
+
+**id** -> The unique id for the group. Used as a marker in other tables to signify a
         User's group.
-name -> The name of the group, e.g. `admins`, `doctors`, etc. Note that in a multi-hospital
+
+**name** -> The name of the group, e.g. `admins`, `doctors`, etc. Note that in a multi-hospital
         setting this would need to also differentiate between doctors from different hospitals
         and such, so you may have `UCLA doctors`, `TUM doctors` and so on.
 
@@ -38,10 +40,13 @@ This assigns the permissions to each `auth_group` based on the permission id in 
 For example, one row of the `auth_group_permissions` table might be to assign the `UCLA_doctors`
 group the ability to read UCLA patient's data, marked by permission id 12.
 
-Headers:
-id -> unique ID for the permission
-group_id -> The `auth_group` for whom the permission id should be granted
-permission_id -> Specific permission by permission_id from `auth_permission`. 
+Headers
+
+**id** -> unique ID for the permission
+
+**group_id** -> The `auth_group` for whom the permission id should be granted
+
+**permission_id** -> Specific permission by permission_id from `auth_permission`. 
 
 #### `auth_permission`
 This contains all the permission types available in RTDS. Examples include being able
@@ -49,36 +54,53 @@ to add or delete patients, beign able to add, change or delete groups and being 
 to view patient information.
 
 Headers
-id -> Unique ID for the permission
-name -> Specific name of the permission. Follows naming `can [ACTION WORD] [VARIABLE TYPE]`,
+
+**id** -> Unique ID for the permission
+
+**name** -> Specific name of the permission. Follows naming `can [ACTION WORD] [VARIABLE TYPE]`,
         no uppercase
-content_type_id -> id of the `[VARIABLE TYPE]` from the name. For example, all permissions 
+
+**content_type_id** -> id of the `[VARIABLE TYPE]` from the name. For example, all permissions 
         relating to `log_entry` may have `content_type_id` 1.
-codename -> name without starting `can`
+
+**codename** -> name without starting `can`
 
 #### `auth_user`
 This contains all the registered users for RTDS, including admins, doctors and clinicians.
 
 Headers
-id -> User's unique ID
-password -> SHA 256 hashed password of user
-last_login -> last time user logged in
-is_superuser -> whether the user is an admin
-username -> user's username
-first_name -> user's first name
-last_name -> user's last name
-email -> user's email
-is_staff -> whether user is a (developer of RTDS?)
-is_active -> Whether the account has been deleted (unsure)
-date_joined -> date of account creation
+
+**id** -> User's unique ID
+
+**password** -> SHA 256 hashed password of user
+
+**last_login** -> last time user logged in
+
+**is_superuser** -> whether the user is an admin
+
+**username** -> user's username
+
+**first_name** -> user's first name
+
+**last_name** -> user's last name
+
+**email** -> user's email
+
+**is_staff** -> whether user is a (developer of RTDS?)
+
+**is_active** -> Whether the account has been deleted (unsure)
+
+**date_joined** -> date of account creation
 
 #### `auth_user_groups`
 This links users by id to groups by id.
 
 Headers
-id -> id of linkage. Not really needed by anything.
-user_id -> id of user from `auth_user`. 
-group_id -> id of group from `auth_group` which the user identified
+**id** -> id of linkage. Not really needed by anything.
+
+**user_id** -> id of user from `auth_user`. 
+
+**group_id** -> id of group from `auth_group` which the user identified
     by `user_id` should belong to. 
 
 #### `auth_user_user_permissions`
@@ -86,9 +108,12 @@ This assigns permissions to user that are already not assigned from
 the group.
 
 Headers
-id -> not really needed, id of linkage
-user_id -> id of user from `auth_user`
-permission_id -> id of permission from `auth_permission`
+
+**id** -> not really needed, id of linkage
+
+**user_id** -> id of user from `auth_user`
+
+**permission_id** -> id of permission from `auth_permission`
 
 #### `oar_dictionary`
 This links names of specific oars against a unique id. Note that
@@ -96,9 +121,12 @@ OAR in this context refers to an ROI - it can be either an OAR
 or a PTV. 
 
 Headers
-id -> Unique database-assigned ID for the given ROI
-ROIName -> Name of the ROI (full name)
-ROIDisplayColor -> What color the contour should be for the ROI when flushed to the GUI. 
+
+**id** -> Unique database-assigned ID for the given ROI
+
+**ROIName** -> Name of the ROI (full name)
+
+**ROIDisplayColor** -> What color the contour should be for the ROI when flushed to the GUI. 
                     Should be a tuple of RGB values. In the event users can change the 
                     color of the ROI in the GUI, this would be the default colors. 
 
@@ -106,26 +134,39 @@ ROIDisplayColor -> What color the contour should be for the ROI when flushed to 
 This stores extracted OVH information for a given PTV-OAR pair for a given patient's study.
 
 Headers
-id -> not really needed, unique id assigned to OVH
-binValue -> supposed to be binValues(?) - values for each bin OVH histogram
-binAmount -> amount of pixels in each bin
-OverlapArea -> unsure
-ptv_id -> id of ptv from `oar_dictionary`
-OAR_id -> id of oar from `oar_dictionary`
-fk_study_id_id -> DICOM study id for which the OVH was extracted from 
+
+**id** -> not really needed, unique id assigned to OVH
+
+**binValue** -> supposed to be binValues(?) - values for each bin OVH histogram
+
+**binAmount** -> amount of pixels in each bin
+
+**OverlapArea** -> unsure
+
+**ptv_id** -> id of ptv from `oar_dictionary`
+
+**OAR_id** -> id of oar from `oar_dictionary`
+
+**fk_study_id_id** -> DICOM study id for which the OVH was extracted from 
 
 #### `patients`
 This is basic patient metadata.
 
 Headers
-id -> database-assigned id for the patient. If two patients from different
+
+**id** -> database-assigned id for the patient. If two patients from different
         hospitals have the same `fk_user_id_id`, this should be used
         as the deciding factor as to which patient information belongs to. 
-PatientName -> name of patient (full)
-BirthDate -> Patient date of birth, `null` if not known
-Gender -> Single character: `M` for Male, `F` for female, `O` for other
-EnthicGroup -> Ethnic Group of patient, e.g. `White`, `Asian` etc
-fk_user_id_id -> user id by hospital. Probably used as a unique patient
+
+**PatientName** -> name of patient (full)
+
+**BirthDate** -> Patient date of birth, `null` if not known
+
+**Gender** -> Single character: `M` for Male, `F` for female, `O` for other
+
+**EnthicGroup** -> Ethnic Group of patient, e.g. `White`, `Asian` etc
+
+**fk_user_id_id** -> user id by hospital. Probably used as a unique patient
                 identifier. Id is typically extracted from DICOM files
                 for a patient.
 
@@ -134,48 +175,205 @@ Stores the contour data to be overlaid over a given slice of a CT object
 for a given patient.
 
 Headers
-id -> not needed, database assigned id for contour
-ContourGeometricType -> from the DICOM object, typically "CLOSED PLANAR"
-NumberOfContourPoints -> Number of points in the contour data. Used
+
+**id** -> not needed, database assigned id for contour
+
+**ContourGeometricType** -> from the DICOM object, typically "CLOSED PLANAR"
+
+**NumberOfContourPoints** -> Number of points in the contour data. Used
                         to preallocate array to store contour data.
-ContourData -> x y z points for a contour. All z coordinates should be 
+
+**ContourData** -> x y z points for a contour. All z coordinates should be 
                 the same in a given contour as it will correspond with a 
                 given slice
-ReferencedSOPClassUID -> "CT Image Storage"
-ReferencedSOPInstanceUID -> the CT image which the contour data is to be
+
+**ReferencedSOPClassUID** -> "CT Image Storage"
+
+**ReferencedSOPInstanceUID** -> the CT image which the contour data is to be
                             overlaid on 
+
 fk_roi_id_id -> id of ROI which the contour belongs to, database id
+
 fk_structureset_id_id -> ID of RT Struct which the contour belongs to, database id
 
+#### `rt_dose`
+Stores dose data from an RT dose object
 
+Headers
+
+**id** -> database ID for the dose information
+
+**SOPClassUID** -> typically the same for all RT dose objects
+
+**SOPInstanceUID** -> DICOM assigned ID for dose object
+
+**DoseGridScaling** -> Directly extracted from the dose object, needed for calculations
+                    relating to the dose.
+
+**DoseSummationType** -> Directly extracted from the dose object, needed for calculations
+                    relating to the dose.
+
+**DoseType** -> Directly extracted from the dose object, needed for calculations
+                    relating to the dose.
+
+**DoseUnits** -> Directly extracted from the dose object, needed for calculations
+                    relating to the dose.  
+
+**eferencedRTPlanSequence** -> Directly extracted from the dose object, needed for calculations
+                    relating to the dose.
+
+**ReferencedStructureSetSequence** -> Directly extracted from the dose object, needed for calculations
+                    relating to the dose.
+
+**fk_patient_id_id** -> database ID for patient who the RT dose object belongs to
+
+**fk_series_id_id** -> database ID for series which the RT dose object belongs to
+
+**fk_study_id_id** -> database ID for study which the RT dose object belongs to
+
+**fk_user_id_id** -> not needed
+
+#### `rt_dvh` 
+
+Stores the Dose Volume Histogram (DVH) for an RT dose object
+
+**id** -> unique ID assigned to rt dose object by db, not needed
+
+**DVHDoseScaling** -> unsure
+
+**DVHMaximumDose** -> unsure
+
+**DVHMeanDose** -> unsure
+
+**DVHMinimumDose** -> unsure
+
+**DVHNumberOfBins** -> unsure
+
+**DVHReferencedROI** -> the ROI which a DVH is describing by db id
+
+**DVHType** -> unsure
+
+**DVHVolumeUnits** -> unsure
+
+**DoseType** -> Unsure
+
+**DoseUnits** -> unsure
+
+**DVHData** -> unsure
+
+**fk_dose_id_id** -> database id of the rt dose object which the dvh is describing
+
+**fk_patient_id_id** -> database id of the patient which the dvh belongs to
+
+**fk_series_id_id** -> database id of the series which the dvh belongs to
+
+**fk_study_id** -> database id of the study which the dvh belongs to
+
+**fk_user_id_id** -> not needed
+
+#### `rt_dose_image`
+Stores dose image data from an RT Dose object
+
+Headers
+
+**id** not needed, db unique id for rt dose image
+
+**columns** of image
+
+**rows** of image
+
+**ImageOrientationPatient** Raw header extracted from DICOM file
+
+**ImagePositionPatient** Raw header extracted from DICOM file
+
+**PhotometricInterpretation** Raw header extracted from DICOM file
+
+**PixelSpacing** Raw header extracted from DICOM file
+
+**NumberOfFrames** Raw header extracted from DICOM file
+
+**ImageData** Raw header extracted from DICOM file
+
+**fk_dose_id_id** db id of rt dose object
+
+**fk_patient_id_id** patient id who rt dose image belongs to
+
+**fk_series_id_id** series which rt dose belongs to
+
+**fk_study_id_id** study which rt dose belongs to
+
+**fk_user_id_id** not needed
+
+#### `rt_isdose`
+RT Isodose data stored after processing by the program. Stores each value
+by pixel.
+
+Headers
+
+**id** -> not needed, unique db assigned id for the RT isodose data
+
+**RowPosition** -> row position wrt CT image rows and columns where isodose pixel is
+
+**ColumnPosition** -> column position wrt CT image rows and columns where isodose pixel is   
+
+**IsDoseValue** -> value of isodose at pixel position
+
+**fk_ct_image_id_id** -> ct image which isodose is to be overlaid on
+
+**fk_dose_id_id** -> dose object database id isodose data was extracted from
+
+**fk_patient_id_id** -> patient database id which rt isodose data belongs to
+
+**fk_series_id_id** -> series database id for isodose data
+
+**fk_study_id_id** -> study databae id for isodose data
+               
 #### `rt_rois`
 Stores the ROIs for a given RT Struct object
 
 Headers
-id -> not needed, ID assigned to an ROI from a given RT Struct object
-ROIName -> Name of the ROI 
-Volume -> volume of ROI (in what measurement?)
-TotalContours -> How many 2D contours have been drawn for the ROI
-fk_structureset_id_id -> RT Struct which the roi belongs to, database id
-fk_patient_id_id -> patient to which the ROI belongs to
-fk_series_id_id -> series to which the ROI belongs to
-fk_study_id_id -> study to which the ROI belongs to
-fk_user_id_id -> not needed
-ROINumber -> directly extracted raw from the DICOM file. 
+
+**id** -> not needed, ID assigned to an ROI from a given RT Struct object
+
+**ROIName** -> Name of the ROI 
+
+**Volume** -> volume of ROI (in what measurement?)
+
+**TotalContours** -> How many 2D contours have been drawn for the ROI
+
+**fk_structureset_id_id** -> RT Struct which the roi belongs to, database id
+
+**fk_patient_id_id** -> patient to which the ROI belongs to
+
+**fk_series_id_id** -> series to which the ROI belongs to
+
+**fk_study_id_id** -> study to which the ROI belongs to
+
+**fk_user_id_id** -> not needed
+
+**ROINumber** -> directly extracted raw from the DICOM file. 
 
 #### `rt_structureset`
 This stores information on the ROIs in an RT STRUCT object
 
 Headers
-id -> unique id assigned by db for RT STRUCT
-SOPInstanceUID -> DICOM UID for the RT structure object
-SOPClassUID -> Defaults to "RT Structure Set Storage". Acts as a failsafe
+
+**id** -> unique id assigned by db for RT STRUCT
+
+**SOPInstanceUID** -> DICOM UID for the RT structure object
+
+**SOPClassUID** -> Defaults to "RT Structure Set Storage". Acts as a failsafe
                 in making sure correct files are uploaded to the correct DB table.
-TotalROIs -> Number of ROIs in RT Struct object
-fk_patient_id_id -> DICOM id for the patient which the RT Struct belongs to
-fk_series_id_id -> DICOM id for the series which the RT Struct belongs to
-fk_study_id_id -> DICOM id for the study which the RT Struct belongs to
-fk_user_id_id -> not needed
+
+**TotalROIs** -> Number of ROIs in RT Struct object
+
+**fk_patient_id_id** -> DICOM id for the patient which the RT Struct belongs to
+
+**fk_series_id_id** -> DICOM id for the series which the RT Struct belongs to
+
+**fk_study_id_id** -> DICOM id for the study which the RT Struct belongs to
+
+**fk_user_id_id** -> not needed
 
 #### `series`
 Stores the DICOM series ID for a given series of images. Types of series
@@ -183,21 +381,32 @@ include CT image series and RT structure series. Typically one study
 will have multiple series in it. 
 
 Headers
-id -> database assigned id for the series
-SeriesInstanceUID -> raw UID from the DICOM files for the series. All DICOM
+**id** -> database assigned id for the series
+
+**SeriesInstanceUID** -> raw UID from the DICOM files for the series. All DICOM
                     files of the same series have the same SeriesInstanceUID
-SeriesDate -> Date series was acquired. 
-SeriesDescription -> Type of Series + manufacturer. For example, one might be
+
+**SeriesDate** -> Date series was acquired. 
+
+**SeriesDescription** -> Type of Series + manufacturer. For example, one might be
                     "Oncentra Structure Set"
-SeriesType -> Either "CT" or "RTSTRUCT" typically
-Modality -> raw field from DICOM file- either "CT" or "RTSTRUCT"
-SeriesNumber -> raw field from DICOM file
-PhysicianOfRecord -> Physician who was involved in acquiring DICOM series. From DICOM
+
+**SeriesType** -> Either "CT" or "RTSTRUCT" typically
+
+**Modality** -> raw field from DICOM file- either "CT" or "RTSTRUCT"
+
+**SeriesNumber** -> raw field from DICOM file
+
+**PhysicianOfRecord** -> Physician who was involved in acquiring DICOM series. From DICOM
                     files themselves.
-Manufacturer -> who manufactured the device the DICOM series was acquired on. 
-fk_patient_id_id -> DICOM id for the patient who the series belongs to
-fk_study_id_id -> DICOM id for the study which the series belongs to
-fk_user_id_id -> not needed?
+
+**Manufacturer** -> who manufactured the device the DICOM series was acquired on. 
+
+**fk_patient_id_id** -> DICOM id for the patient who the series belongs to
+
+**fk_study_id_id** -> DICOM id for the study which the series belongs to
+
+**fk_user_id_id** -> not needed?
 
 #### `similarity`
 This is used to store similarity values for the OVH, STS and target dose for 
@@ -205,57 +414,86 @@ a pair of patients. These values are generated by the Python scripts and
 stored here.
 
 Headers
-id -> not really needed, ID of similarity pair
-DBStudyID -> The "Historical" patient in the pair. Typically at the time
+
+**id**-> not really needed, ID of similarity pair
+
+**DBStudyID** -> The "Historical" patient in the pair. Typically at the time
     of this calculation, one of the patients is newly-uploaded, who is
     considered the current patient. The other patient in the pair is considered
     the historical patient. This is the study ID of the historical patient,
     from `studies`
-Similarity -> Target Dose similarity (unsure)
-OVHDissimilarity -> Similarity between two Overlap Volume Histograms for the two patients
-STSDissimilarity -> Similarity between two Spatial Target Signature histograms
-TargetOAR -> the OAR the OVH / STS are between, identified by id in `oar_dictionary`
-fk_study_id_id -> the study ID of the current patient
+
+**Similarity** -> Target Dose similarity (unsure)
+
+**OVHDissimilarity** -> Similarity between two Overlap Volume Histograms for the two patients
+
+**STSDissimilarity** -> Similarity between two Spatial Target Signature histograms
+
+**TargetOAR** -> the OAR the OVH / STS are between, identified by id in `oar_dictionary`
+
+**fk_study_id_id** -> the study ID of the current patient
 
 #### `sts`
 Stores values for the Spatial Target Signature Histogram for a specified patient.
 
 Headers
-id -> not really needed, unique id of STS histogram for a patient and given PTV-OAR pair in DB
-elevation_bins -> amounts for the elevation bins in the STS histogram
-distance_bins -> amounts for the distance bins in the STS histogram
-azimuth_bins -> amounts for the azimuth bins in the STS histogram
-amounts -> flattened array (unsure) storing the values for each (elevation, distance, azimuth)
+
+**id** -> not really needed, unique id of STS histogram for a patient and given PTV-OAR pair in DB
+
+**elevation_bins** -> amounts for the elevation bins in the STS histogram
+
+**distance_bins** -> amounts for the distance bins in the STS histogram
+
+**azimuth_bins** -> amounts for the azimuth bins in the STS histogram
+
+**amounts** -> flattened array (unsure) storing the values for each (elevation, distance, azimuth)
             tuple. 
-ptv_id -> id of primary target volume from `oar_dictionary`
-OAR_id -> id of organ at risk from `oar_dictionary`
-fk_study_id_id -> id of study (DICOM) from `studies` for which the STS histogram belongs to. 
+
+**ptv_id** -> id of primary target volume from `oar_dictionary`
+
+**OAR_id** -> id of organ at risk from `oar_dictionary`
+
+**fk_study_id_id** -> id of study (DICOM) from `studies` for which the STS histogram belongs to. 
 
 #### `studies`
 This stores which study belongs to which patient. 
 
 Headers
-id -> database assigned id for the study
-StudyInstanceUID -> from a DICOM file, what the study UID is
-StudyDate -> Extracted from DICOM file with specified StudyInstanceUID
-StudyDescription -> What the study scanned for 
-TotalSeries -> unsure
-fk_patient_id_id -> DICOM patient ID for whom the study belongs to. 
-fk_user_id_id -> unsure. This should probably not exist
+
+**id** -> database assigned id for the study
+
+**StudyInstanceUID** -> from a DICOM file, what the study UID is
+
+**StudyDate** -> Extracted from DICOM file with specified StudyInstanceUID
+
+**StudyDescription** -> What the study scanned for 
+
+**TotalSeries** -> unsure
+
+**fk_patient_id_id** -> DICOM patient ID for whom the study belongs to. 
+
+**fk_user_id_id** -> unsure. This should probably not exist
 
 #### `userprofile_userprofile`
 This is general user information on each person.
 
 Headers
-id -> not really needed, id of metadata
-occupation -> occupation of user by id
-institution -> place where the user works
-birthday -> user date of birth
-location -> location where the user works
-bio -> biographical statement on the user. For example,
+
+**id** -> not really needed, id of metadata
+
+**occupation** -> occupation of user by id
+
+**institution** -> place where the user works
+
+**birthday** -> user date of birth
+
+**location** -> location where the user works
+
+**bio** -> biographical statement on the user. For example,
         one might write. "Dr. something, formerly worked at UCLA,
         now works at Roswell Park as a Radiation Oncologist"
-user_id -> id for which the profile information belongs, user id from
+
+**user_id** -> id for which the profile information belongs, user id from
             `auth_user`.
 
 
@@ -283,7 +521,7 @@ from admin login)
 * Determine whether patient name should be split into first/last name fields.
 * should we link studies in `studies` by database or DICOM patient ID? database patient
     ID seems less prone to errors. 
-* Purpose of `fk_user_id_id` in `studies` table?
+* Purpose of `fk_user_id_id` in tables- should probably be cut from SQL design?
 * How are `amounts` in the `sts` table going to be stored? For a large histogram, we risk
     having to store at low precision to stay within data limits of the table. 
 * Create parser to dump all UCLA patient data into the database. `patients`, `series`, all the
@@ -295,3 +533,10 @@ from admin login)
 * A user should automatically be given rights to patients whose DICOM files they upload
 * Add `ROI_ID` field to `rt_rois` table
 * Dashboard for the Contour data for a given patient, DVH data and Isodose contours for a given patient
+* Improve RT Dose documentation
+* Ensure DICOMCleaner Works, send to Benjamin if it does for use in acquiring the DICOM files
+* Fill out headers for `rt_dose` to be more descriptive
+* Fill out headers for `rt_dose_image` to be more descriptive
+* Determine how unit testing should be performed for calls against the SQL database- it should construct
+    a mock / dummy sql database for writing to?
+* Create python script to generate a database in the correct format
