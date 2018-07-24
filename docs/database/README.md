@@ -158,6 +158,58 @@ Headers
 
 **fk_user_id_id** `int(11)` -> not needed
 
+#### `django_admin_log`
+
+Headers
+
+**id** `int(11)`
+
+**action_flag** `smallint(5) UNSIGNED`
+
+**action_time** `datetime`
+
+**change_message** `longtext`
+
+**content_type_id** `int(11)`
+
+**object_id** `longtext`
+
+**object_repr** `varchar(200)`
+
+**user_id** `int(11)`
+
+#### `django_content_type`
+
+Headers
+
+**id** `int(11)`
+
+**app_label** `varchar(100)`
+
+**model** `varchar(100)`
+
+#### `django_migrations`
+
+Headers
+
+**id** `int(11)`
+
+**app** `varchar(255)`
+
+**name** `varchar(255)`
+
+**applied** `datetime`
+
+#### `django_session`
+
+Headers
+
+**session_key** `varchar(40)`
+
+**session_data** `longtext`
+
+**expire_date** `datetime`
+
 #### `oar_dictionary`
 This links names of specific oars against a unique id. Note that
 OAR in this context refers to an ROI - it can be either an OAR
@@ -297,7 +349,7 @@ Headers
 
 **NumberOfFrames** `int(11)` Raw header extracted from DICOM file
 
-**ImageData** `longtext` Raw header extracted from DICOM file
+**ImageData** `longtext` Raw image data from the DICOM file
 
 **fk_dose_id_id** `int(11)` db id of rt dose object
 
@@ -424,6 +476,7 @@ include CT image series and RT structure series. Typically one study
 will have multiple series in it. 
 
 Headers
+
 **id** `int(11)`-> database assigned id for the series
 
 **SeriesInstanceUID** `varchar(200)` -> raw UID from the DICOM files for the series. All DICOM
@@ -538,54 +591,3 @@ Headers
 
 **user_id** `int(11)`-> id for which the profile information belongs, user id from
             `auth_user`.
-
-
-
-#### TODO: 
-* Permission to access patient data by Hospital
-* Set up initial auth_groups for `UCLA Doctor`, `UCLA admin`, and later on,
-    `Roswell Park Doctor`, `Roswell Park Admin`.
-* Add features on GUI to add first name, last name to account
-* Add features on GUI to change email address or password. 
-* Add features on GUI to retire account. Retiring the account should force
-    the user to also re-assign all patients that are only assigned to one doctor,
-    and should only be performable by an admin or developer.
-* Add features on GUI to be able to assign permissions to a user (only should be visible
-from admin login)
-* Differentiation between developer, superuser, admin and user
-    * Developers should be able to see all hospitals but not patient info
-    * Superusers should be able to see all hospitals and patient info
-    * admins should be able to see patient info only for their hospital (+ admin
-        privileges should only apply to patients / users from their hospital)
-    * users should also have privileges which apply only to their hospital
-* Add column to `patients` table that identifies to which hospital they belong. This
-    may need to be accompanied by a new table that links each hospital against a
-    unique id. `userprofile` may also need to link institution then by hospital id. 
-* Determine whether patient name should be split into first/last name fields.
-* should we link studies in `studies` by database or DICOM patient ID? database patient
-    ID seems less prone to errors. 
-* Purpose of `fk_user_id_id` in tables- should probably be cut from SQL design?
-* How are `amounts` in the `sts` table going to be stored? For a large histogram, we risk
-    having to store at low precision to stay within data limits of the table. 
-* Create parser to dump all UCLA patient data into the database. `patients`, `series`, all the
-    tables the start with `rt`, `ct_images` and `studies` will need to be updated with raw
-    data. `similarity` and `sts` and `ovh` will need to be updated with calculation
-* Rerunning a calculation for `sts`, `ovh` or `similarity` should overwrite the calculation
-    in the database. 
-* Patient Dashboard GUI for both all types of users to view the patients they have been assigned
-* A user should automatically be given rights to patients whose DICOM files they upload
-* Add `ROI_ID` field to `rt_rois` table
-* Dashboard for the Contour data for a given patient, DVH data and Isodose contours for a given patient
-* Improve RT Dose documentation
-* Ensure DICOMCleaner Works, send to Benjamin if it does for use in acquiring the DICOM files
-* Fill out headers for `rt_dose` to be more descriptive
-* Fill out headers for `rt_dose_image` to be more descriptive
-* Determine how unit testing should be performed for calls against the SQL database- it should construct
-    a mock / dummy sql database for writing to?
-* Create python script to generate a database in the correct format
-* Ensure `RescaleSlope`, `RescaleIntercept`, and `SliceLocation` in `ct_images` can only be integers
-* Should `ROIDisplayColor` be `varchar(100)`? We can set a tighter lower bound of about 13 characters:
-"(xxx,yyy,zzz)"
-* Why is `PatientGender` in `patients` `varchar(20)`? it should be `varchar(1)`
-* Why is `DBStudyID` in `similarity` `varchar`? it should be `int(11)`
-* Why is `TargetOAR` in `similarity` `varchar`? it should be `int(11)`
