@@ -134,6 +134,11 @@ jupyter notebook
 at the terminal. When you confirm that your function's output
 is correct, then it can be converted to a .py file.
 
+## Data
+
+Download the data from [This link](https://drive.google.com/drive/folders/1YwzKKxY9evcj_MxbuCr-RSCuN3CwmUAt?usp=sharing).
+Do note that the cases `UCLA_PR_26` and `UCLA_PR_27` are corrupted, so they cannot be accessed. 
+
 ## Documentation
 
 One of the main drawbacks of the MATLAB code is that we have no

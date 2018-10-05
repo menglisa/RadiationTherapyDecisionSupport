@@ -4,7 +4,6 @@ import sys
 sys.path.append('..')
 import glob
 from collections import Counter,OrderedDict, defaultdict
-import AlgoEngine.settings as settings
 import cv2
 import dicom
 
@@ -42,28 +41,28 @@ def getROINumber(structureset, roi_name, excluding=[]):
 
 
 def getContourInputs(BASE_DIR, StudyID, ROI_NAME, excluding=[]):
-	"""
-	Returns inputs needed to test `getContours` with Local inputs. Prevents
-	repetitive code in the notebooks.
+    """
+    Returns inputs needed to test `getContours` with Local inputs. Prevents
+    repetitive code in the notebooks.
 
-	Parameters
-	----------
-	BASE_DIR : string
-		The base directory containing the `StudyID` subfolders.
+    Parameters
+    ----------
+    BASE_DIR : string
+        The base directory containing the `StudyID` subfolders.
 
-	StudyID : string
-		The study ID for the case being used.
+    StudyID : string
+        The study ID for the case being used.
 
-	ROI_NAME : string
-		The name of the ROI to extract contours for 
+    ROI_NAME : string
+        The name of the ROI to extract contours for 
 
-	excluding : List
-		Default value is an empty list (`[]`). Used to avoid repeatedly getting 
-		same ROI name.
+    excluding : List
+        Default value is an empty list (`[]`). Used to avoid repeatedly getting 
+        same ROI name.
 
-	Returns
-	-------
-	block_shape : tuple
+    Returns
+    -------
+    block_shape : tuple
         The shape of the CT block, in the format `(height,
         width)`
 
@@ -89,38 +88,38 @@ def getContourInputs(BASE_DIR, StudyID, ROI_NAME, excluding=[]):
         of CT images). Key is also ReferencedSOPInstanceUID.
 
 
-	"""
-	ctFilenames = [fl for fl in os.listdir(BASE_DIR + StudyID) if 'CT.' in fl]
-	numImages = len(ctFilenames)
+    """
+    ctFilenames = [fl for fl in os.listdir(BASE_DIR + "/" + StudyID) if 'CT' in fl]
+    numImages = len(ctFilenames)
 
-	sampleCTImage = dicom.read_file(BASE_DIR + StudyID + '/' + ctFilenames[0])
-	width = sampleCTImage.Columns
-	height = sampleCTImage.Rows
+    sampleCTImage = dicom.read_file(BASE_DIR + StudyID + '/' + ctFilenames[0])
+    width = sampleCTImage.Columns
+    height = sampleCTImage.Rows
 
-	block_shape = (width, height)
+    block_shape = (width, height)
 
-	structureset = dicom.read_file(BASE_DIR + StudyID + '/structureset.dcm')
-	ROI_NUM = getROINumber(structureset, ROI_NAME)
+    structureset = dicom.read_file(BASE_DIR + StudyID + '/structureset.dcm')
+    ROI_NUM = getROINumber(structureset, ROI_NAME)
 
-	roiNumPlanes = len(structureset.ROIContourSequence[ROI_NUM].ContourSequence) 
+    roiNumPlanes = len(structureset.ROIContourSequence[ROI_NUM].ContourSequence) 
 
-	contour_data = {} # Input to function
-	image_orientation = {} # Input to function
-	image_position = {} # Input to function
-	pixel_spacing = {} # Input to function
+    contour_data = {} # Input to function
+    image_orientation = {} # Input to function
+    image_position = {} # Input to function
+    pixel_spacing = {} # Input to function
 
-	for index in range(0, roiNumPlanes):
-	    
-	    imageSOP = structureset.ROIContourSequence[ROI_NUM].ContourSequence[index].ContourImageSequence[0].ReferencedSOPInstanceUID
-	    
-	    planeContourData = np.array(structureset.ROIContourSequence[ROI_NUM].ContourSequence[index].ContourData)
-	    planeContourData = planeContourData.reshape(planeContourData.shape[0] // 3 , 3)
-	    
-	    contour_data[imageSOP] = planeContourData
-	    imagei = dicom.read_file(BASE_DIR + StudyID + '/CT.' + imageSOP + '.dcm')
-	    
-	    image_orientation[imageSOP] = imagei.ImageOrientationPatient
-	    image_position[imageSOP] = imagei.ImagePositionPatient
-	    pixel_spacing[imageSOP] = imagei.PixelSpacing 
+    for index in range(0, roiNumPlanes):
+        
+        imageSOP = structureset.ROIContourSequence[ROI_NUM].ContourSequence[index].ContourImageSequence[0].ReferencedSOPInstanceUID
+        
+        planeContourData = np.array(structureset.ROIContourSequence[ROI_NUM].ContourSequence[index].ContourData)
+        planeContourData = planeContourData.reshape(planeContourData.shape[0] // 3 , 3)
+        
+        contour_data[imageSOP] = planeContourData
+        imagei = dicom.read_file(BASE_DIR + StudyID + '/CT.' + imageSOP + '.dcm')
+        
+        image_orientation[imageSOP] = imagei.ImageOrientationPatient
+        image_position[imageSOP] = imagei.ImagePositionPatient
+        pixel_spacing[imageSOP] = imagei.PixelSpacing 
 
-	return block_shape, contour_data, image_orientation, image_position, pixel_spacing
+    return block_shape, contour_data, image_orientation, image_position, pixel_spacing
