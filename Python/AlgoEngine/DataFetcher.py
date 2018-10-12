@@ -21,26 +21,44 @@ import re
 
 query_for_study_list = 'SELECT id from studies WHERE id NOT IN (%s)'
 query_for_roi_list = 'SELECT * from rt_rois WHERE fk_study_id_id = %s'
+query_for_roi_name = 'SELECT ROIName from oar_dictionary WHERE id= %s'
 query_for_contour = 'SELECT * from rt_contour WHERE fk_roi_id_id = %s AND fk_structureset_id_id = %s'
 query_for_image_plane_info = 'SELECT * from ct_images WHERE SOPInstanceUID = %s'
 class DataFetcher():
-    def __init__(self):
+
+    def __init__(self, database_username=settings.database_username, 
+            database_password=settings.database_password, use_ssh=True):
+
         """
         Initializes datafetcher by building SSH connection, and saving the connection cursor.
-
         Then, funnctions to load data are prepared using the SSH tunnel.
-        """
-        self.server = SSHTunnelForwarder((settings.ssh_hostname, settings.ssh_port), ssh_username=settings.ssh_username,
-                                    ssh_password=settings.ssh_password,
-                                        remote_bind_address=('127.0.0.1', 3306))
-        self.server.start()
 
-        self.connection = MySQLdb.connect('127.0.0.1',port = self.server.local_bind_port,
-                          user = settings.database_username,passwd = settings.database_password,db = settings.database_name)
+        Parameters
+        ----------
+        database_username : str
+            Username for mysql database
+        database_password : str
+            password for mysql database
+        use_ssh : bool
+            whether to use remote db or local db (false)
+        """
+        port = 3306
+        if use_ssh:
+            self.server = SSHTunnelForwarder((settings.ssh_hostname, settings.ssh_port), ssh_username=settings.ssh_username,
+                                        ssh_password=settings.ssh_password,
+                                            remote_bind_address=('127.0.0.1', 3306))
+            self.server.start()
+            port = self.server.local_bind_port
+
+        self.connection = MySQLdb.connect('127.0.0.1',port=port,
+                          user = database_username,
+                          passwd = database_password,
+                          db = settings.database_name, 
+                          autocommit=True)
 
         self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        print("Finished loading data")
+        print("Finished Setting up database access")
 
 
     #with these two functions, we could use with statement with instance of this class
@@ -146,7 +164,7 @@ class DataFetcher():
 
         print("Starting contour")
         for roi in rois:
-            roi_name = roi['ROIName']
+            roi_id = roi['ROIName_id']
             self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
             contour_dict = {}
             imagePatientOrientaion = {}
@@ -177,7 +195,10 @@ class DataFetcher():
             contour_block,roi_block = getContours(block_shape, contour_dict, image_orientation=imagePatientOrientaion,
                                         image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
 
-            if re.match(r'^PTV',roi_name,re.IGNORECASE):
+            # Checks for PTVs using ROI name -> if it contains PTV we assume it is a PTV
+            self.cursor.execute(query_for_roi_name, (roi_id,))
+            roi_name = self.cursor.fetchone()['ROIName']
+            if "ptv" in roi_name.lower():
                 ptv_dict[roi_name] = (contour_block,roi_block)
             else:
                 oar_dict[roi_name] = (contour_block,roi_block)
@@ -216,7 +237,8 @@ class DataFetcher():
         :param StudyID:
         :return:if the action is a success or not
         '''
-        query_insert_ovh = 'INSERT INTO ovh (binValue,binAmount,OverlapArea,ptv_id,OAR_id,fk_study_id_id) VALUES (%s,%s,%s,%s,%s,%s)'
+        
+        query_insert_ovh = 'INSERT INTO ovh (bin_value, bin_amount, OverlapArea, ptv_id, oar_id, fk_study_id_id) VALUES (%s,%s,%s,%s,%s,%s)'
         query_oar_id = 'SELECT id from oar_dictionary WHERE ROIName = %s'
         
         # used because pymysql expects list params, not strings 
@@ -228,13 +250,13 @@ class DataFetcher():
             oar_name = [oar_name]
         
         self.cursor.execute(query_oar_id, ptv_name)
-        ptv_id = self.cursor.fetchone()
+        ptv_id = self.cursor.fetchone()["id"]
         self.cursor.execute(query_oar_id, oar_name)
-        oar_id = self.cursor.fetchone()
+        oar_id = self.cursor.fetchone()["id"]
         binValue = ','.join(str(point) for point in ovh_hist[0])
         binAmount = ','.join(str(point) for point in ovh_hist[1])
 
-        self.cursor.execute(query_insert_ovh,[binValue],[binAmount],[20],[ptv_id,oar_id],[studyID])
+        self.cursor.execute(query_insert_ovh,[binValue, binAmount, 20,ptv_id, oar_id, studyID])
 
 
     def save_sts(self,ptv_name,oar_name,sts_hist,StudyID):
@@ -244,15 +266,19 @@ class DataFetcher():
         :param StudyID:
         :return:
         '''
-        query_insert_sts = 'INSERT INTO sts (elevation_bins,distance_bins,azimuth_bins,amounts,ptv_id,OAR_id,study_id_id) VALUES (%s,%s,%s,%s,%s,%s,%s)'
+        query_insert_sts = 'INSERT INTO sts (elevation_bins,distance_bins,azimuth_bins,amounts,ptv_id,oar_id,fk_study_id_id) VALUES (%s,%s,%s,%s,%s,%s,%s)'
         query_oar_id = 'SELECT id from oar_dictionary WHERE ROIName = %s'
 
-        self.cursor.execute(query_oar_id, ptv_name)
-        ptv_id = self.cursor.fetchone()
-        self.cursor.execute(query_oar_id, oar_name)
-        oar_id = self.cursor.fetchone()
+        self.cursor.execute(query_oar_id, [ptv_name])
+        ptv_id = self.cursor.fetchone()['id']
+        self.cursor.execute(query_oar_id, [oar_name])
+        oar_id = self.cursor.fetchone()['id']
+        elevation = ",".join(str(point) for point in sts_hist[0])
+        azimuth = ",".join(str(point) for point in sts_hist[1])
+        distance = ",".join(str(point) for point in sts_hist[2])
+        amounts = ",".join(str(point) for point in sts_hist[3])
 
-        self.cursor.execute(query_insert_sts,sts_hist[0],sts_hist[1],sts_hist[2],sts_hist[3],ptv_id,oar_id,StudyID)
+        self.cursor.execute(query_insert_sts, [elevation, distance, azimuth, amounts ,ptv_id,oar_id,StudyID])
 
 
     #I don't know how to get this value, so we don't consider this right now

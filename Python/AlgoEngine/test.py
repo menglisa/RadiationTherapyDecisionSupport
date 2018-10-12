@@ -8,9 +8,24 @@ import pdb
 
 from AlgoEngine import AlgoManager
 
+"""
+Testing file for the backend SQL connections
+with the functions.
 
-am = AlgoManager('1')
+First, feature extraction is done and saved
+to the server. 
 
+Then (in the future) you can use this script
+for similarity testing as well
+"""
+
+DATABASE_USERNAME = "root"
+# PUT PASSWORD HERE
+PASSWORD = ""
+
+am = AlgoManager('1', DATABASE_USERNAME, PASSWORD, False)
+
+# tests saving of STS and OVH
 am.feature_extraction()
 
 

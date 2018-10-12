@@ -26,9 +26,9 @@ class AlgoManager():
     attribute
     self.StudyIDs
     '''
-    def __init__(self, studyID):
+    def __init__(self, studyID, database_username, database_password, use_ssh=True):
         #create a datafetcher instance to fetch the data from the database
-        self.data_fetcher = DataFetcher()
+        self.data_fetcher = DataFetcher(database_username, database_password, use_ssh)
 
         self.n_bins = 10
 
@@ -47,6 +47,10 @@ class AlgoManager():
         '''
         #Both PTV and OAR are dictionary
         PTV,OAR = self.data_fetcher.get_contours(self.queryStudyID)
+        
+        # Check that PTV has been found
+        assert len(PTV.keys()) > 0 , "PTV NOT FOUND"
+
         row_spacing, column_spacing, slice_thickness = self.data_fetcher.get_spacing(self.queryStudyID)
         pixel_spacing = self.data_fetcher.get_pixel_spacing(self.queryStudyID)
 
@@ -73,11 +77,10 @@ class AlgoManager():
                 print("STS Done")
                 # print("Get Sts {}".format(sts_hist))
 
-
                 self.data_fetcher.save_ovh(ptv_name,oar_name,ovh_hist,self.queryStudyID)
-                # self.data_fetcher.save_sts(ptv_name,oar_name,sts_hist,self.queryStudyID)
+                self.data_fetcher.save_sts(ptv_name,oar_name,sts_hist,self.queryStudyID)
 
-                print("Saved OVH")
+                print("Saved OVH and STS")
         pass
 
     def generate_pairs(self,queryStudy,dbStudy):
