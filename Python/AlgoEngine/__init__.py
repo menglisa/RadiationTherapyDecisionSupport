@@ -63,7 +63,6 @@ class AlgoManager():
 
                 ptv_contour_block = ptv_tuple[0]
                 ptv_roi_block = ptv_tuple[1]
-
                 bin_vals, bin_amts = getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing,
                             row_spacing, column_spacing, slice_thickness, self.n_bins)
 
@@ -124,7 +123,7 @@ class AlgoManager():
                 ovh_item = ovh_pairs[key]
                 ovh_dis = getOVHEmd(ovh_item[0][0],ovh_item[0][1],ovh_item[1][0],ovh_item[1][1])
                 sts_item = sts_pairs[key]
-                sts_dis = getSTSEmd(sts_item)
+                sts_dis = getSTSEmd(sts_item[0], sts_item[1])
                 self.data_fetcher.save_similarity(studyID,0,ovh_dis,sts_dis,key,self.queryStudyID)
 
 
@@ -135,7 +134,6 @@ class AlgoManager():
         #fetch OVH and STS of other cases
         #Do the similarity calculation
         #Save the result to database
-
 
         #queryStudyID
         self.queryStudyID = StudyID

@@ -21,9 +21,9 @@ for similarity testing as well
 
 DATABASE_USERNAME = "root"
 # PUT PASSWORD HERE
-PASSWORD = ""
+PASSWORD = "Madden08"
 
-am = AlgoManager('1', DATABASE_USERNAME, PASSWORD, False)
+am = AlgoManager('2', DATABASE_USERNAME, PASSWORD, False)
 
 # tests saving of STS and OVH
 am.feature_extraction()

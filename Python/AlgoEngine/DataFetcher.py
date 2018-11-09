@@ -240,6 +240,7 @@ class DataFetcher():
         
         query_insert_ovh = 'INSERT INTO ovh (bin_value, bin_amount, OverlapArea, ptv_id, oar_id, fk_study_id_id) VALUES (%s,%s,%s,%s,%s,%s)'
         query_oar_id = 'SELECT id from oar_dictionary WHERE ROIName = %s'
+        query_ovh_exists = "SELECT * from ovh where fk_study_id_id = %s and ptv_id = %s and oar_id = %s"
         
         # used because pymysql expects list params, not strings 
         # even for only one string
@@ -253,13 +254,19 @@ class DataFetcher():
         ptv_id = self.cursor.fetchone()["id"]
         self.cursor.execute(query_oar_id, oar_name)
         oar_id = self.cursor.fetchone()["id"]
+
+        # check if ovh already exists, delete if it does
+        rows_count = self.cursor.execute(query_ovh_exists, (studyID, ptv_id, oar_id))
+        if rows_count > 0:
+            query_delete = "DELETE from ovh where fk_study_id_id = %s and ptv_id = %s and oar_id = %s"
+            self.cursor.execute(query_delete, (studyID, ptv_id, oar_id))
+
         binValue = ','.join(str(point) for point in ovh_hist[0])
         binAmount = ','.join(str(point) for point in ovh_hist[1])
 
         self.cursor.execute(query_insert_ovh,[binValue, binAmount, 20,ptv_id, oar_id, studyID])
 
-
-    def save_sts(self,ptv_name,oar_name,sts_hist,StudyID):
+    def save_sts(self,ptv_name,oar_name,sts_hist, study_id):
         '''
         definition is the same as save_ovh
         :param sts: has the same data structure like the one in save_ovh
@@ -268,17 +275,25 @@ class DataFetcher():
         '''
         query_insert_sts = 'INSERT INTO sts (elevation_bins,distance_bins,azimuth_bins,amounts,ptv_id,oar_id,fk_study_id_id) VALUES (%s,%s,%s,%s,%s,%s,%s)'
         query_oar_id = 'SELECT id from oar_dictionary WHERE ROIName = %s'
+        query_sts_exists = "Select * from sts where fk_study_id_id = %s and ptv_id = %s and oar_id = %s"
 
         self.cursor.execute(query_oar_id, [ptv_name])
         ptv_id = self.cursor.fetchone()['id']
         self.cursor.execute(query_oar_id, [oar_name])
         oar_id = self.cursor.fetchone()['id']
+    
+        # check if sts already exists, delete if it does
+        rows_count = self.cursor.execute(query_sts_exists, (study_id, ptv_id, oar_id))
+        if rows_count > 0:
+            query_delete = "DELETE from sts where fk_study_id_id = %s and ptv_id = %s and oar_id = %s"
+            self.cursor.execute(query_delete, (study_id, ptv_id, oar_id))
+
         elevation = ",".join(str(point) for point in sts_hist[0])
         azimuth = ",".join(str(point) for point in sts_hist[1])
         distance = ",".join(str(point) for point in sts_hist[2])
         amounts = ",".join(str(point) for point in sts_hist[3])
 
-        self.cursor.execute(query_insert_sts, [elevation, distance, azimuth, amounts ,ptv_id,oar_id,StudyID])
+        self.cursor.execute(query_insert_sts, [elevation, distance, azimuth, amounts ,ptv_id,oar_id,study_id])
 
 
     #I don't know how to get this value, so we don't consider this right now

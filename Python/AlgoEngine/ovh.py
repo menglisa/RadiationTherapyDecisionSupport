@@ -129,7 +129,6 @@ def getOVHDistances(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing
 	alpha = column_spacing / row_spacing
 	beta =  slice_spacing / row_spacing
 
-
 	for oar_voxel in range(0, num_oar_voxels_i):
 	    min_distance = 1000000
 	    for ptv_voxel in range(0, num_ptv_voxels):
@@ -154,6 +153,94 @@ def getOVHDistances(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing
 
 	return oar_dists
 
+
+def getOVHDistancesOptimized(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing, column_spacing, slice_spacing):
+	"""
+	Returns the distances of each voxel in the `oar_roi_block` to the nearest PTV surface voxel, with 
+	additional optimizations in numpy
+
+	Parameters
+	----------
+	oar_roi_block : 3D NdArray
+		A 3D array with 1s inside and on contour perimeter of OAR ROI and 0s elsewhere.
+
+	ptv_contour_block : 3D NdArray
+		A 3D array with 1s on contour perimeter of PTV and 0s elsewhere.
+
+	ptv_roi_block : 3D NdArray
+		A 3D array with 1s inside and on contour perimeter of PTV ROI and 0s elsewhere.
+
+	row_spacing : float
+		Spacing between rows of CT image
+
+	column_spacing : float
+		Spacing between columns of CT image
+
+	slice_spacing : float
+		Spacing between slices (separate CT images) of CT block
+
+	Returns
+	-------
+	oar_dists : 3D NdArray
+		A 3D array with the same shape as `oar_roi_block`. Where `oar_roi_block` contains 1s,
+		`oar_dists` contains distances between the given voxel and the closest voxel on the PTV
+		surface. Note that distance is negative for an OAR voxel inside the PTV.
+
+	"""
+	oar_intersecting = np.zeros(oar_roi_block.shape).astype(np.int8)
+	oar_nonintersecting = np.zeros(oar_roi_block.shape).astype(np.int8)
+
+	oar_intersecting[(oar_roi_block == 1) & (oar_roi_block == ptv_roi_block)] = 1
+	oar_nonintersecting = oar_roi_block - oar_intersecting
+
+	oar_i_coords = np.nonzero(oar_intersecting)
+
+	oar_ni_coords = np.nonzero(oar_nonintersecting)
+
+	oar_dists = np.zeros(oar_roi_block.shape).astype(np.float32)
+
+	ptv_coords = np.nonzero(ptv_contour_block)
+	# reshape to 1 array
+	ptv_coords = np.concatenate(( 
+		np.expand_dims(ptv_coords[0],axis=-1),
+		np.expand_dims(ptv_coords[1],axis=-1),
+		np.expand_dims(ptv_coords[2],axis=-1),
+	), axis=-1)
+	oar_ni_coords = np.concatenate(( 
+		np.expand_dims(oar_ni_coords[0],axis=-1),
+		np.expand_dims(oar_ni_coords[1],axis=-1),
+		np.expand_dims(oar_ni_coords[2],axis=-1),
+	), axis=-1)
+	oar_i_coords = np.concatenate(( 
+		np.expand_dims(oar_i_coords[0],axis=-1),
+		np.expand_dims(oar_i_coords[1],axis=-1),
+		np.expand_dims(oar_i_coords[2],axis=-1),
+	), axis=-1)
+
+	num_oar_voxels_i = np.count_nonzero(oar_intersecting)
+	num_oar_voxels_ni = np.count_nonzero(oar_nonintersecting)
+
+	alpha = column_spacing / row_spacing
+	beta =  slice_spacing / row_spacing
+	
+	for oar_voxel in range(0, num_oar_voxels_i):
+		oar_dists[oar_i_coords[oar_voxel]] = -1 * np.min(np.sqrt(np.sum(
+			(ptv_coords[:, 0] - oar_i_coords[oar_voxel, 0]) ** 2 +
+			alpha * (ptv_coords[:, 1] - oar_i_coords[oar_voxel, 1]) ** 2 +
+			beta * (ptv_coords[:, 2] - oar_i_coords[oar_voxel, 2]) ** 2
+			)))
+
+	print("processing nonintersecting ovh pixels: " + str(num_oar_voxels_ni))
+	for oar_voxel in range(0, num_oar_voxels_ni):
+		if (oar_voxel + 1) % int(num_oar_voxels_ni/10) == 0:
+			print("processing pixels...")
+		oar_dists[oar_ni_coords[oar_voxel]] = np.min(np.sqrt(np.sum(
+			(ptv_coords[:, 0] - oar_ni_coords[oar_voxel, 0]) ** 2 +
+			alpha * (ptv_coords[:, 1] - oar_ni_coords[oar_voxel, 1]) ** 2 +
+			beta * (ptv_coords[:, 2] - oar_ni_coords[oar_voxel, 2]) ** 2
+			)))
+
+	return oar_dists
 
 def getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing, 
 	row_spacing, column_spacing, slice_spacing, n_bins):
@@ -199,7 +286,7 @@ def getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing,
 
 	"""
 	
-	oar_dists = getOVHDistances(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing, column_spacing, slice_spacing)
+	oar_dists = getOVHDistancesOptimized(oar_roi_block, ptv_contour_block, ptv_roi_block, row_spacing, column_spacing, slice_spacing)
 	print("done with distance")
 	bin_vals, bin_amts = getHistogram(oar_dists, oar_roi_block, n_bins)
 	print("done with histogram")

@@ -197,7 +197,6 @@ def getAzimuth(ptv_vox, oar_cen):
     """
     elevation = getElevation(ptv_vox, oar_cen)
     distance = getDistance(ptv_vox, oar_cen)
-    
     z_over_r = elevation/distance
     azimuth = acos(z_over_r)
     return azimuth
