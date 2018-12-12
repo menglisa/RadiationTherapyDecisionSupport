@@ -19,30 +19,15 @@ Then (in the future) you can use this script
 for similarity testing as well
 """
 
-DATABASE_USERNAME = "root"
-# PUT PASSWORD HERE
-PASSWORD = "Madden08"
-
-am = AlgoManager('2', DATABASE_USERNAME, PASSWORD, False)
+am = AlgoManager('3', False)
 
 # tests saving of STS and OVH
-am.feature_extraction()
+#am.feature_extraction()
+
+# TODO: tests saving of similarity
+am.similarity_calculation()
 
 
-"""try:
-    with DataFetcher() as df:
-        # contour_block = df.get_contours(1)
-        # print(len(contour_block))
-        ptv,oar = df.get_contours(2)
-        print(ptv.keys())
-        print(oar.keys())
-except:
-    print("some error happens")
-
-print("end")
-
-
-"""
 ########################################################################################################################
 #
 # query_for_study_list = 'SELECT * from studies'

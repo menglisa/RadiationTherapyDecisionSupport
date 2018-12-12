@@ -1,7 +1,9 @@
 import numpy as np
 from math import sqrt
-from AlgoEngine.utils import getVolume, getContours
-
+try:
+	from .utils import getVolume, getContours
+except:
+	from AlgoEngine.utils import getVolume, getContours
 def getNormalizedHistogram(bin_amts, volume):
 	"""
 	Returns the normalized vector containing the 
@@ -232,7 +234,7 @@ def getOVHDistancesOptimized(oar_roi_block, ptv_contour_block, ptv_roi_block, ro
 
 	print("processing nonintersecting ovh pixels: " + str(num_oar_voxels_ni))
 	for oar_voxel in range(0, num_oar_voxels_ni):
-		if (oar_voxel + 1) % int(num_oar_voxels_ni/10) == 0:
+		if (oar_voxel + 1) % max(1, int(num_oar_voxels_ni/10)) == 0:
 			print("processing pixels...")
 		oar_dists[oar_ni_coords[oar_voxel]] = np.min(np.sqrt(np.sum(
 			(ptv_coords[:, 0] - oar_ni_coords[oar_voxel, 0]) ** 2 +

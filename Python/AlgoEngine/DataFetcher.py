@@ -1,19 +1,23 @@
 import MySQLdb
 from sshtunnel import SSHTunnelForwarder
-from AlgoEngine.utils import *
 import numpy as np
-import pdb
 from collections import defaultdict, OrderedDict
 
 # Imports for STS / OVH / etc
 import sys
 sys.path.append('..')
-from AlgoEngine.utils import *
-import AlgoEngine.settings as settings
-from AlgoEngine.sts import getSTSHistogram
-from AlgoEngine.ovh import getOVH
-from AlgoEngine.similarity import getSTSEmd, getOVHEmd, getTDDistance
-
+try:
+    from .utils import *
+    from .settings import * 
+    from .sts import getSTSHistogram
+    from .ovh import getOVH
+    from .similarity import getSTSEmd, getOVHEmd, getTDDistance
+except:
+    from AlgoEngine.utils import *
+    from AlgoEngine.settings import * 
+    from AlgoEngine.sts import getSTSHistogram
+    from AlgoEngine.ovh import getOVH
+    from AlgoEngine.similarity import getSTSEmd, getOVHEmd, getTDDistance
 import re
 
 #in order to use this AlgoEngine separately, we build this datafetcher by using MySQLdb instead of Django ORM
@@ -26,8 +30,7 @@ query_for_contour = 'SELECT * from rt_contour WHERE fk_roi_id_id = %s AND fk_str
 query_for_image_plane_info = 'SELECT * from ct_images WHERE SOPInstanceUID = %s'
 class DataFetcher():
 
-    def __init__(self, database_username=settings.database_username, 
-            database_password=settings.database_password, use_ssh=True):
+    def __init__(self, use_ssh=True):
 
         """
         Initializes datafetcher by building SSH connection, and saving the connection cursor.
@@ -44,17 +47,13 @@ class DataFetcher():
         """
         port = 3306
         if use_ssh:
-            self.server = SSHTunnelForwarder((settings.ssh_hostname, settings.ssh_port), ssh_username=settings.ssh_username,
-                                        ssh_password=settings.ssh_password,
+            self.server = SSHTunnelForwarder((ssh_hostname, ssh_port), ssh_username=ssh_username,
+                                        ssh_password=ssh_password,
                                             remote_bind_address=('127.0.0.1', 3306))
             self.server.start()
             port = self.server.local_bind_port
 
-        self.connection = MySQLdb.connect('127.0.0.1',port=port,
-                          user = database_username,
-                          passwd = database_password,
-                          db = settings.database_name, 
-                          autocommit=True)
+        self.connection = MySQLdb.connect(read_default_file='/etc/mysql/my.cnf', autocommit=True)
 
         self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
 
@@ -198,7 +197,7 @@ class DataFetcher():
             # Checks for PTVs using ROI name -> if it contains PTV we assume it is a PTV
             self.cursor.execute(query_for_roi_name, (roi_id,))
             roi_name = self.cursor.fetchone()['ROIName']
-            if "ptv" in roi_name.lower():
+            if "ptv" in roi_name.lower() or "psite" in roi_name.lower():
                 ptv_dict[roi_name] = (contour_block,roi_block)
             else:
                 oar_dict[roi_name] = (contour_block,roi_block)
@@ -324,7 +323,7 @@ class DataFetcher():
         ovhDict = defaultdict()
 
         for row in data:
-            ovhDict[row['OAR_id']] = (row['binValue'],row['binAmount'])
+            ovhDict[str(row['oar_id']) + " " + str(row['ptv_id'])] = (row['bin_value'],row['bin_amount'])
 
         return ovhDict
 
@@ -343,11 +342,20 @@ class DataFetcher():
         stsDict = defaultdict()
 
         for row in data:
-            stsDict[row['OAR_id']] = (row['elevation_bins'],row['distance_bins'],row['azimuth_bins'],row['amounts'])
+            stsDict[str(row['oar_id']) + " " + str(row['ptv_id'])] = (row['elevation_bins'],row['distance_bins'],
+                row['azimuth_bins'],row['amounts'])
 
         return stsDict
 
-    def save_similarity(self,DBStudyID,Similarity,OVHDisimilarity,STSDisimilarity,TargetOAR,fk_study_id_id):
+    def save_similarity(self,
+            DBStudyID,
+            TDSimilarity,
+            OVHDisimilarity,
+            STSDisimilarity,
+            TargetOAR_id,
+            TargetPTV_id,
+            fk_study_id_id_query,
+            fk_study_id_id_historical):
 
         '''
         save a instance of sim
@@ -355,8 +363,13 @@ class DataFetcher():
         :param StudyID:
         :return:
         '''
-        insert_similarity = 'INSERT INTO similarity(DBStudyID, Similarity,OVHDisimilarity,STSDisimilarity, TargetOAR, fk_study_id_id VALUES (%s,%s,%s,%s,%s,%s)'
-        self.cursor.execute(insert_similarity,DBStudyID,Similarity,OVHDisimilarity,STSDisimilarity,TargetOAR,fk_study_id_id)
+        insert_similarity = 'INSERT INTO similarity (DBStudyID, TD_dissimilarity, \
+            OVH_dissimilarity, STS_dissimilarity, TargetOAR_id, TargetPTV_id, \
+            fk_study_id_1_id, fk_study_id_2_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)'
+
+        self.cursor.execute(insert_similarity,
+                [DBStudyID, TDSimilarity, OVHDisimilarity, STSDisimilarity, TargetOAR_id, TargetPTV_id,
+                fk_study_id_id_query, fk_study_id_id_historical])
 
 
     def get_dbstudy_list(self,studyID):

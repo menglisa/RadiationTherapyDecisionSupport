@@ -3,8 +3,8 @@ import dicom
 import sys
 sys.path.append('..')
 import cv2
-from AlgoEngine.ovh import getOVH
-from AlgoEngine.utils import getContours
+from .ovh import getOVH
+from .utils import getContours
 from math import sqrt
 
 

@@ -1,7 +1,9 @@
 import numpy as np
 from math import acos
-from AlgoEngine.utils import getVolume
-
+try:
+    from .utils import getVolume
+except:
+    from AlgoEngine.utils import getVolume
 
 def getSTSHistogram(ptv_roi_block, oar_roi_block, n_bins):
     """
