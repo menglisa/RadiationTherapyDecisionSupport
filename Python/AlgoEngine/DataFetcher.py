@@ -163,7 +163,7 @@ class DataFetcher():
 
         print("Starting contour")
         for roi in rois:
-            roi_id = roi['ROIName_id']
+            roi_id = roi['roi_id_id']
             self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
             contour_dict = {}
             imagePatientOrientaion = {}
@@ -197,8 +197,14 @@ class DataFetcher():
             # Checks for PTVs using ROI name -> if it contains PTV we assume it is a PTV
             self.cursor.execute(query_for_roi_name, (roi_id,))
             roi_name = self.cursor.fetchone()['ROIName']
-            if "ptv" in roi_name.lower() or "psite" in roi_name.lower():
+            roi_interpretation = roi["roi_interpretation"]
+            if "PTV" in roi_interpretation or "CTV" in roi_interpretation:
                 ptv_dict[roi_name] = (contour_block,roi_block)
+            elif "none" in roi_interpretation.lower():
+                if "ptv" in roi_name.lower():
+                    ptv_dict[roi_name] = (contour_block,roi_block)
+                else:
+                    oar_dict[roi_name] = (contour_block,roi_block)
             else:
                 oar_dict[roi_name] = (contour_block,roi_block)
 
@@ -295,18 +301,6 @@ class DataFetcher():
         self.cursor.execute(query_insert_sts, [elevation, distance, azimuth, amounts ,ptv_id,oar_id,study_id])
 
 
-    #I don't know how to get this value, so we don't consider this right now
-    def get_target_dose(self,studyID):
-        '''
-        get the target dose for this studyID
-        :param studyID:
-        :return:
-        '''
-        target_dose = getMeanTargetDose(ptv_roi_block, block_shape, dose_grid, 
-                          DoseGridScaling, x0, y0, x_spacing, y_spacing, sopUID)
-        pass
-
-
     def get_ovh(self,studyID):
         '''
         get the ovh of this study, if the study has two ptv or more, make it to be a single ptv-ovh
@@ -371,6 +365,21 @@ class DataFetcher():
                 [DBStudyID, TDSimilarity, OVHDisimilarity, STSDisimilarity, TargetOAR_id, TargetPTV_id,
                 fk_study_id_id_query, fk_study_id_id_historical])
 
+    def get_target_dose(self, dicom_roi_id, study_id):
+        """
+        Parameters
+        ----------
+
+        dicom_roi_id : integer
+            corresponds to the DICOM ROI id of a given RTROI
+        """
+        query_target_dose = "SELECT DVHMeanDose from rt_dvh where roi_id = %s and fk_study_id_id = %s"
+        self.cursor.execute(query_target_dose, [dicom_roi_id, study_id])
+
+        data = self.cursor.fetchall()
+
+        for row in data:
+            return data["DVHMeanDose"]
 
     def get_dbstudy_list(self,studyID):
         '''

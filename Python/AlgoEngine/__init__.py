@@ -164,20 +164,24 @@ class AlgoManager():
                 ovh_dis = getOVHEmd(ovh_item[0][0],ovh_item[0][1],ovh_item[1][0],ovh_item[1][1])
                 sts_item = sts_pairs[key]
                 sts_dis = getSTSEmd(sts_item[0][3], sts_item[1][3])
-                self.data_fetcher.save_similarity(str(historical_id), str(0), str(ovh_dis), str(sts_dis), key.split(" ")[0], 
+
+                # Get PTV target dose
+                query_target_dose = self.data_fetcher.get_target_dose(self.queryStudyID, int(key.split(" ")[1]))
+                historical_target_dose = self.data_fetcher.get_target_dose(historical_id, int(key.split(" ")[1]))
+
+                self.data_fetcher.save_similarity(str(historical_id), query_target_dose - 
+                        historical_target_dose, str(ovh_dis), str(sts_dis), key.split(" ")[0], 
                     key.split(" ")[-1], str(historical_id), self.queryStudyID)
 
 
     #The entrance of the program
-    def run(self,StudyID):
+    def run(self):
         #extract OVH and STS for new case
         #store the OVH and STS
         #fetch OVH and STS of other cases
         #Do the similarity calculation
         #Save the result to database
 
-        #queryStudyID
-        self.queryStudyID = StudyID
         #Store the StudyID of all DB studies for future similarity calculation
         self.DBStudy_list = self.data_fetcher.get_dbstudy_list(self.queryStudyID)
 
