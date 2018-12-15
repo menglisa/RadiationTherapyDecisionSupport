@@ -38,69 +38,84 @@ def getSTSHistogram(ptv_roi_block, oar_roi_block, n_bins):
         percentage of points in each interval, normalized but not cumulative.
 
     """
-    centroid = getCentroid(oar_roi_block)
-    
-    elevation = np.zeros(np.count_nonzero(ptv_roi_block))
-    distance = np.zeros(np.count_nonzero(ptv_roi_block))
-    azimuth = np.zeros(np.count_nonzero(ptv_roi_block))
-    
-    count = 0
 
-    for i in range(0, ptv_roi_block.shape[0]):
-        for j in range(0, ptv_roi_block.shape[1]):
-            for k in range(0, ptv_roi_block.shape[2]):
-                if ptv_roi_block[i,j,k] == 1:
-                    elevation[count] = getElevation(centroid, [i,j,k])
-                    distance[count] = getDistance(centroid, [i,j,k])
-                    azimuth[count] = getAzimuth(centroid, [i,j,k])
+    roi_pixels = np.count_nonzero(ptv_roi_block)
+    oar_pixels = np.count_nonzero(oar_roi_block)
+
+    print("Processing STS of ptv pixels: " + str(roi_pixels) + " oar pixels: " + str(oar_pixels))
+    if oar_pixels < 1000000:
+
+        centroid = getCentroid(oar_roi_block)
+    
+        elevation = np.zeros(roi_pixels)
+        distance = np.zeros(roi_pixels)
+        azimuth = np.zeros(roi_pixels) 
+        amounts = np.zeros((n_bins ** 3, 4)).astype(np.float32)   
+    
+        count = 0
+
+        for i in range(0, ptv_roi_block.shape[0]):
+            for j in range(0, ptv_roi_block.shape[1]):
+                for k in range(0, ptv_roi_block.shape[2]):
+                    if ptv_roi_block[i,j,k] == 1:
+                        elevation[count] = getElevation(centroid, [i,j,k])
+                        distance[count] = getDistance(centroid, [i,j,k])
+                        azimuth[count] = getAzimuth(centroid, [i,j,k])
+                        count += 1
+
+        epsilon = 1e-6 # To guarantee max > any point in array
+
+        elevation_max = np.max(elevation) + epsilon
+        elevation_min = np.min(elevation)
+        distance_max = np.max(distance) + epsilon
+        distance_min = np.min(distance) 
+        
+        # TODO: as a failsafe, we remove `np.nan` values
+        # in this line of code- why can azimuth have NAN values?
+        nanlocations = np.isnan(azimuth)
+        azimuth = azimuth[~nanlocations]
+        elevation = elevation[~nanlocations]
+        distance = distance[~nanlocations]
+        
+        azimuth_max = np.max(azimuth) + epsilon
+        azimuth_min = np.min(azimuth) 
+
+        elevation_delta = (elevation_max-elevation_min) / n_bins
+        distance_delta = (distance_max-distance_min) / n_bins
+        azimuth_delta = (azimuth_max-azimuth_min) / n_bins
+
+        elevation_bins = np.concatenate((np.arange(elevation_min,elevation_max,elevation_delta), 
+                                     np.expand_dims(np.array(elevation_max), axis=0)))
+        distance_bins = np.concatenate((np.arange(distance_min,distance_max,distance_delta), 
+                                        np.expand_dims(np.array(distance_max), axis=0)))
+        azimuth_bins = np.concatenate((np.arange(azimuth_min,azimuth_max,azimuth_delta), 
+                                       np.expand_dims(np.array(azimuth_max), axis=0)))
+
+        total_combinations = (elevation_bins.shape[0] - 1) * (distance_bins.shape[0] - 1) * (azimuth_bins.shape[0] - 1)
+        amounts = np.zeros((total_combinations, 4)).astype(np.float32)
+    
+        amount = 0.0
+        count = 0
+
+        for i in range(0, elevation_bins.shape[0] - 1):
+            for j in range(0, distance_bins.shape[0] - 1):
+                for k in range(0, azimuth_bins.shape[0] - 1):
+                    amount = np.count_nonzero((elevation >= elevation_bins[i]) & 
+                        (elevation < elevation_bins[i+1]) & (distance >= distance_bins[j]) 
+                        & (distance < distance_bins[j+1]) & (azimuth >= azimuth_bins[k]) & 
+                        (azimuth < azimuth_bins[k+1]))
+                    amounts[count] = np.array([elevation_bins[i], 
+                                               distance_bins[j], azimuth_bins[k], amount]).astype(np.float32)
                     count += 1
 
-    epsilon = 1e-6 # To guarantee max > any point in array
+        amounts[:, 3] = amounts[:, 3] / getVolume(ptv_roi_block)
 
-    elevation_max = np.max(elevation) + epsilon
-    elevation_min = np.min(elevation)
-    distance_max = np.max(distance) + epsilon
-    distance_min = np.min(distance) 
-    
-    # TODO: as a failsafe, we remove `np.nan` values
-    # in this line of code- why can azimuth have NAN values?
-    nanlocations = np.isnan(azimuth)
-    azimuth = azimuth[~nanlocations]
-    elevation = elevation[~nanlocations]
-    distance = distance[~nanlocations]
-    
-    azimuth_max = np.max(azimuth) + epsilon
-    azimuth_min = np.min(azimuth) 
-
-    elevation_delta = (elevation_max-elevation_min) / n_bins
-    distance_delta = (distance_max-distance_min) / n_bins
-    azimuth_delta = (azimuth_max-azimuth_min) / n_bins
-
-    elevation_bins = np.concatenate((np.arange(elevation_min,elevation_max,elevation_delta), 
-                                 np.expand_dims(np.array(elevation_max), axis=0)))
-    distance_bins = np.concatenate((np.arange(distance_min,distance_max,distance_delta), 
-                                    np.expand_dims(np.array(distance_max), axis=0)))
-    azimuth_bins = np.concatenate((np.arange(azimuth_min,azimuth_max,azimuth_delta), 
-                                   np.expand_dims(np.array(azimuth_max), axis=0)))
-
-    total_combinations = (elevation_bins.shape[0] - 1) * (distance_bins.shape[0] - 1) * (azimuth_bins.shape[0] - 1)
-    amounts = np.zeros((total_combinations, 4)).astype(np.float32)
-    
-    amount = 0.0
-    count = 0
-
-    for i in range(0, elevation_bins.shape[0] - 1):
-        for j in range(0, distance_bins.shape[0] - 1):
-            for k in range(0, azimuth_bins.shape[0] - 1):
-                amount = np.count_nonzero((elevation >= elevation_bins[i]) & 
-                    (elevation < elevation_bins[i+1]) & (distance >= distance_bins[j]) 
-                    & (distance < distance_bins[j+1]) & (azimuth >= azimuth_bins[k]) & 
-                    (azimuth < azimuth_bins[k+1]))
-                amounts[count] = np.array([elevation_bins[i], 
-                                           distance_bins[j], azimuth_bins[k], amount]).astype(np.float32)
-                count += 1
-
-    amounts[:, 3] = amounts[:, 3] / getVolume(ptv_roi_block)
+    else:
+        elevation_bins = np.zeros((n_bins)+1)
+        distance_bins = np.zeros((n_bins)+1)
+        azimuth_bins = np.zeros((n_bins)+1)
+        total_combinations = (elevation_bins.shape[0]-1) * (distance_bins.shape[0]-1) * (azimuth_bins.shape[0]-1)
+        amounts = np.zeros((total_combinations, 4)).astype(np.float32)
 
     return elevation_bins, distance_bins, azimuth_bins, amounts
 

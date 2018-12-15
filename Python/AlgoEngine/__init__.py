@@ -104,6 +104,8 @@ class AlgoManager():
                             query_array[count] = float(val.strip())
                             count +=1
                     query_array = query_array.reshape((self.n_bins ** 3, 4))
+                    if count != self.n_bins ** 3 * 4:
+                        import pdb ; pdb.set_trace()
                     assert count == self.n_bins ** 3 * 4, "invalid parsed STS values"
                 else:
                     query_values = block.split(",")
@@ -159,6 +161,9 @@ class AlgoManager():
             sts_pairs = self.generate_pairs(querySTS,dbSTS)
 
             keys = ovh_pairs.keys()
+            if len(keys) > 0:
+                print("Processing similar pairs")
+
             for key in keys:
                 ovh_item = ovh_pairs[key]
                 ovh_dis = getOVHEmd(ovh_item[0][0],ovh_item[0][1],ovh_item[1][0],ovh_item[1][1])
@@ -186,7 +191,7 @@ class AlgoManager():
         self.DBStudy_list = self.data_fetcher.get_dbstudy_list(self.queryStudyID)
 
         #calculate ovh,sts and save it to database
-        self.feature_extraction()
+        # self.feature_extraction()
 
         self.similarity_calculation()
 

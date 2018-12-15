@@ -365,7 +365,7 @@ class DataFetcher():
                 [DBStudyID, TDSimilarity, OVHDisimilarity, STSDisimilarity, TargetOAR_id, TargetPTV_id,
                 fk_study_id_id_query, fk_study_id_id_historical])
 
-    def get_target_dose(self, dicom_roi_id, study_id):
+    def get_target_dose(self, study_id, dicom_roi_id):
         """
         Parameters
         ----------
@@ -373,13 +373,23 @@ class DataFetcher():
         dicom_roi_id : integer
             corresponds to the DICOM ROI id of a given RTROI
         """
-        query_target_dose = "SELECT DVHMeanDose from rt_dvh where roi_id = %s and fk_study_id_id = %s"
-        self.cursor.execute(query_target_dose, [dicom_roi_id, study_id])
+
+        # Conversion from roi to rt_roi (original in oar_dictionary to rt roi contour)
+        query_roi_id_from_rtroi = "SELECT id from rt_rois where roi_id_id= %s and fk_study_id_id = %s"
+        self.cursor.execute(query_roi_id_from_rtroi, [dicom_roi_id, study_id])
+        roi = self.cursor.fetchone()
+        roi_id = roi["id"]
+        
+
+
+        query_target_dose = "SELECT DVHMeanDose from rt_dvh where DVHReferencedROI_id = %s and fk_study_id_id = %s"
+        self.cursor.execute(query_target_dose, [roi_id, study_id])
 
         data = self.cursor.fetchall()
+        
 
         for row in data:
-            return data["DVHMeanDose"]
+            return float(row["DVHMeanDose"])
 
     def get_dbstudy_list(self,studyID):
         '''
