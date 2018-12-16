@@ -31,6 +31,9 @@ class AlgoManager():
 
         self.queryStudyID = studyID
 
+    def get_contours_by_id(self, roi_index):
+        return self.data_fetcher.get_contours_by_id(self.queryStudyID, roi_index)
+
     def feature_extraction(self):
         '''
         call ovh, sts and td to get the ovh sts and td features
@@ -191,7 +194,7 @@ class AlgoManager():
         self.DBStudy_list = self.data_fetcher.get_dbstudy_list(self.queryStudyID)
 
         #calculate ovh,sts and save it to database
-        # self.feature_extraction()
+        self.feature_extraction()
 
         self.similarity_calculation()
 

@@ -128,6 +128,50 @@ class DataFetcher():
     def get_pixel_spacing(self, studyID):
         return self.pixel_spacing
 
+    def __get_contours(self, roi):
+        roi_id = roi['roi_id_id']
+        self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
+        contour_dict = {}
+        imagePatientOrientaion = {}
+        imagePatientPosition = {}
+        pixelSpacing = {}
+        block_shape = []
+        Contours = self.cursor.fetchall()
+        for contour in Contours:
+            contour_array = np.array(contour['ContourData'].split(','), dtype=np.float32)
+            contour_array = contour_array.reshape(contour_array.shape[0] // 3 , 3)
+
+            contour_dict[contour['ReferencedSOPInstanceUID']] = contour_array
+            self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
+            image_info = self.cursor.fetchall()[0]
+            imagePatientOrientaion[contour['ReferencedSOPInstanceUID']] = np.array(image_info['ImageOrientationPatient'].split(','), dtype=np.float32)
+            
+            spacing_array = np.array(image_info['PixelSpacing'].split(','), dtype=np.float32)
+            pixelSpacing[contour['ReferencedSOPInstanceUID']] = spacing_array
+
+            if not block_shape:
+                block_shape = (image_info['Rows'], image_info['Columns'])
+
+            imagePatientPosition[contour['ReferencedSOPInstanceUID']] = np.array(image_info['ImagePositionPatient'].split(','), dtype=np.float32)
+
+        self.pixel_spacing = pixelSpacing
+        return getContours(block_shape, contour_dict, image_orientation=imagePatientOrientaion,
+                                    image_position=imagePatientPosition, pixel_spacing=pixelSpacing), imagePatientPosition
+
+
+    def get_contours_by_id(self, studyID, roi_index):
+        self.cursor.execute(query_for_roi_list,studyID)
+        rois = self.cursor.fetchall()
+        contour_dict = {}
+        image_position = None
+        print("Starting contour")
+        for roi in rois:
+            roi_id = roi['roi_id_id']
+            if roi_id != roi_index:
+                continue
+            contours, image_position = self.__get_contours(roi)
+            contour_dict[roi_id] = contours
+        return contour_dict, image_position
 
     def get_contours(self,studyID):
         '''
@@ -164,35 +208,7 @@ class DataFetcher():
         print("Starting contour")
         for roi in rois:
             roi_id = roi['roi_id_id']
-            self.cursor.execute(query_for_contour, (roi['id'], roi['fk_structureset_id_id']))
-            contour_dict = {}
-            imagePatientOrientaion = {}
-            imagePatientPosition = {}
-            pixelSpacing = {}
-            block_shape = []
-            Contours = self.cursor.fetchall()
-            for contour in Contours:
-                contour_array = np.array(contour['ContourData'].split(','), dtype=np.float32)
-                contour_array = contour_array.reshape(contour_array.shape[0] // 3 , 3)
-
-                contour_dict[contour['ReferencedSOPInstanceUID']] = contour_array
-                self.cursor.execute(query_for_image_plane_info, [contour['ReferencedSOPInstanceUID']])
-                image_info = self.cursor.fetchall()[0]
-                imagePatientOrientaion[contour['ReferencedSOPInstanceUID']] = np.array(image_info['ImageOrientationPatient'].split(','), dtype=np.float32)
-                
-                spacing_array = np.array(image_info['PixelSpacing'].split(','), dtype=np.float32)
-                pixelSpacing[contour['ReferencedSOPInstanceUID']] = spacing_array
-
-                if not block_shape:
-                    block_shape = (image_info['Rows'], image_info['Columns'])
-
-                imagePatientPosition[contour['ReferencedSOPInstanceUID']] = np.array(image_info['ImagePositionPatient'].split(','), dtype=np.float32)
-
-
-            #Change the definition of this function a little bit
-            self.pixel_spacing = pixelSpacing
-            contour_block,roi_block = getContours(block_shape, contour_dict, image_orientation=imagePatientOrientaion,
-                                        image_position=imagePatientPosition, pixel_spacing=pixelSpacing)
+            contour_block, roi_block = __get_contours(roi)
 
             # Checks for PTVs using ROI name -> if it contains PTV we assume it is a PTV
             self.cursor.execute(query_for_roi_name, (roi_id,))
