@@ -208,7 +208,7 @@ class DataFetcher():
         print("Starting contour")
         for roi in rois:
             roi_id = roi['roi_id_id']
-            contour_block, roi_block = __get_contours(roi)
+            contour_block, roi_block = self.__get_contours(roi)
 
             # Checks for PTVs using ROI name -> if it contains PTV we assume it is a PTV
             self.cursor.execute(query_for_roi_name, (roi_id,))
