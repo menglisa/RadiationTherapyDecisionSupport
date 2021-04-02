@@ -55,11 +55,11 @@ class AlgoManager():
             for oar_name,oar_tuple in OAR.items():
                 #in the tuple, the first one is contour block and the second one is roi block
                 print("process the pair")
-                oar_contour_block = oar_tuple[0]
-                oar_roi_block = oar_tuple[1]
+                oar_contour_block = oar_tuple[0][0]
+                oar_roi_block = oar_tuple[0][1]
 
-                ptv_contour_block = ptv_tuple[0]
-                ptv_roi_block = ptv_tuple[1]
+                ptv_contour_block = ptv_tuple[0][0]
+                ptv_roi_block = ptv_tuple[0][1]
                 bin_vals, bin_amts = getOVH(oar_roi_block, ptv_contour_block, ptv_roi_block, pixel_spacing,
                             row_spacing, column_spacing, slice_thickness, self.n_bins)
 
